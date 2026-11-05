@@ -54,6 +54,15 @@ h2::after{content:"";flex:1;height:1px;background:var(--line)}
 .bar i{width:9px;height:5px;background:#2b3830}
 .bar i.on{background:var(--hud)}
 .loadout{display:grid;gap:5px}
+.paints{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.pbtn{appearance:none;background:var(--panel2);border:1px solid var(--line);padding:8px 4px 7px;cursor:pointer;display:grid;justify-items:center;gap:5px;font-size:11px;line-height:1.25;text-align:center;min-width:0}
+.pbtn i{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:block}
+.pbtn[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
+.pbtn[aria-pressed="true"] i{border-color:var(--amber);box-shadow:0 0 0 2px var(--panel2),0 0 0 3px var(--amber)}
+.pfx{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;min-height:24px}
+.pfx span{padding:3px 8px;border:1px solid var(--line);color:var(--dim)}
+.pfx .up{color:var(--good);border-color:rgba(166,224,127,.45)}
+.pfx .dn{color:var(--red);border-color:rgba(255,90,68,.45)}
 .lo{display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:baseline;font-size:13px;line-height:1.45}
 .lo kbd{font-family:var(--fm);font-size:12px;border:1px solid var(--line);padding:1px 0;text-align:center;color:var(--amber);background:var(--panel2)}
 .lo small{color:var(--dim)}
@@ -96,6 +105,7 @@ details.keys b{color:var(--hud);font-weight:500}
 .slot .cd{position:absolute;left:0;bottom:0;height:3px;background:var(--amber);width:0}
 .slot.on{border-color:var(--amber);background:rgba(40,32,12,.86)}
 .slot.empty .a{color:var(--red)}
+.slot.rl{border-color:var(--ally)} .slot.rl .a{color:var(--ally);font-family:var(--fb);font-size:11px} .slot.rl .cd{background:var(--ally)}
 #skills{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:6px}
 .sk{pointer-events:auto;appearance:none;width:70px;height:70px;background:var(--panel);border:1px solid var(--line);position:relative;cursor:pointer;padding:5px;display:grid;align-content:space-between;text-align:left;overflow:hidden}
 .sk .k{font-size:15px;color:var(--amber)} .sk .n{font-family:var(--fb);font-size:11px;line-height:1.2;position:relative;z-index:1}
@@ -191,6 +201,9 @@ details.keys b{color:var(--hud);font-weight:500}
         <div id="classCards" class="cards"></div>
         <h2>기종</h2>
         <div id="typeList" class="types"></div>
+        <h2>도색</h2>
+        <div id="paintList" class="paints"></div>
+        <div id="paintFx" class="pfx"></div>
       </section>
       <div class="spacer"></div>
       <section class="col">
@@ -201,13 +214,14 @@ details.keys b{color:var(--hud);font-weight:500}
         <div class="optrow"><span class="lab">시간대</span><div id="optTime" class="seg"></div></div>
         <div class="optrow"><span class="lab">맵 크기</span><div id="optSize" class="seg"></div></div>
         <div class="optrow"><span class="lab">난이도</span><div id="optDiff" class="seg"></div></div>
+        <div class="optrow"><span class="lab">탄약을 다 썼을 때</span><div id="optReload" class="seg"></div></div>
         <button id="reroll" class="ghost" type="button">같은 지형 종류로 새 지도 만들기</button>
         <button id="startBtn" class="go" type="button">출격</button>
         <details class="keys">
           <summary>조작법</summary>
           <p><b>전차 · 함선</b> W/S 전진·후진 (함선은 속도 단계 조절), A/D 선회, 마우스로 조준, 좌클릭 발사, 우클릭 확대</p>
           <p><b>전투기</b> W/S 추력, 마우스를 움직인 방향으로 기체가 따라감, A/D 롤</p>
-          <p><b>공통</b> 1~4 또는 휠로 무기 선택, Q/E/R 스킬 바로 사용, Tab 스킬 선택, 스페이스 선택된 스킬 사용, C 시점 거리, Esc 일시정지. 미사일은 목표를 조준선 가까이 두면 잠금됩니다.</p>
+          <p><b>공통</b> 1~4 또는 휠로 무기 선택, Q/E/R 스킬 바로 사용, Tab 스킬 선택, 스페이스 선택된 스킬 사용, C 시점 거리, Esc 일시정지. 미사일은 목표를 조준선 가까이 두면 잠금됩니다. 미사일·폭탄을 다 쓰면 재장전합니다. 설정에서 자동 또는 수동을 고를 수 있고, F키(터치는 선택된 무기 칸을 한 번 더)로 언제든 직접 재장전할 수 있어요.</p>
           <p><b>터치</b> 왼쪽 화면 드래그로 이동, 오른쪽 드래그로 조준, 발사 버튼을 누르고 있기</p>
         </details>
       </section>
@@ -327,7 +341,31 @@ const EK={
   battery:{name:'적 해안포',domain:'land',hp:320,speed:0,score:110},
   aa:{name:'적 대공진지',domain:'land',hp:280,speed:0,score:110},
 };
-const S={cls:'ship',type:1,terrain:'coast',time:'day',size:'normal',diff:'normal',seed:(Math.random()*1e6)|0};
+const RELOADS={auto:{name:'자동 재장전'},manual:{name:'수동 (F키)'}};
+const DEFCOL={tank:0x5f6b45,ship:0x7f8b93,carrier:0x7a868e,jet:0x8c98a2};
+const PAINTS={
+  std:{name:'기본 도색',col:null,m:{}},
+  camo:{name:'위장 녹색',col:0x4d6638,m:{acc:1.12,speed:.95}},
+  desert:{name:'사막 황토',col:0xb89a62,m:{hp:1.12,turn:.92}},
+  navy:{name:'해군 청색',col:0x3d5872,m:{speed:1.08,hp:.94}},
+  arctic:{name:'북극 흰색',col:0xdfe4e6,m:{skillCd:.88,hp:.92}},
+  black:{name:'스텔스 블랙',col:0x23262a,m:{evade:.3,dmg:.94}},
+  red:{name:'에이스 레드',col:0xa3302a,m:{dmg:1.15,acc:.9}},
+  gold:{name:'황금 도장',col:0xc9a23a,m:{score:1.25,hp:.9}},
+};
+function paintEffects(P){
+  const m=P.m,out=[],pc=v=>Math.round(Math.abs(v-1)*100)+'%';
+  if(m.hp)out.push([`내구도 ${m.hp>1?'+':'-'}${pc(m.hp)}`,m.hp>1]);
+  if(m.speed)out.push([`속도 ${m.speed>1?'+':'-'}${pc(m.speed)}`,m.speed>1]);
+  if(m.turn)out.push([`선회력 ${m.turn>1?'+':'-'}${pc(m.turn)}`,m.turn>1]);
+  if(m.dmg)out.push([`화력 ${m.dmg>1?'+':'-'}${pc(m.dmg)}`,m.dmg>1]);
+  if(m.acc)out.push([`적 명중률 ${m.acc>1?'-':'+'}${pc(m.acc)}`,m.acc>1]);
+  if(m.skillCd)out.push([`스킬 대기시간 ${m.skillCd<1?'-':'+'}${pc(m.skillCd)}`,m.skillCd<1]);
+  if(m.score)out.push([`획득 점수 +${pc(m.score)}`,true]);
+  if(m.evade)out.push([`적 미사일 ${Math.round(m.evade*100)}% 확률로 빗나감`,true]);
+  return out;
+}
+const S={cls:'ship',type:1,terrain:'coast',time:'day',size:'normal',diff:'normal',reload:'auto',paint:'std',seed:(Math.random()*1e6)|0};
 try{const s=JSON.parse(localStorage.getItem('steelfront.settings')||'null');if(s&&CLASSES[s.cls]&&TERRAINS[s.terrain])Object.assign(S,s,{seed:(Math.random()*1e6)|0});}catch(e){}
 function saveSettings(){try{localStorage.setItem('steelfront.settings',JSON.stringify(S));}catch(e){}}
 function getBest(){try{return JSON.parse(localStorage.getItem('steelfront.best')||'{}');}catch(e){return {};}}
@@ -654,11 +692,12 @@ function placeGround(u,len,wid){
   u.model.rotation.set(-Math.atan2(hf-hb,2*len),u.yaw,Math.atan2(hl-hr,2*wid),'YXZ');
 }
 
-function buildPlayerModel(cls,T){
-  if(cls==='tank')return makeTank(0x5f6b45,T.id,T.scale);
-  if(cls==='ship')return makeShip(T.len,T.tur,0x7f8b93,{barrels:T.barrels});
-  if(cls==='carrier')return makeCarrier(T.len,0x7a868e);
-  return makeJet(0x8c98a2,T.id,1);
+function buildPlayerModel(cls,T,col){
+  const c=col==null?DEFCOL[cls]:col;
+  if(cls==='tank')return makeTank(c,T.id,T.scale);
+  if(cls==='ship')return makeShip(T.len,T.tur,c,{barrels:T.barrels});
+  if(cls==='carrier')return makeCarrier(T.len,c);
+  return makeJet(c,T.id,1);
 }
 function spawnPointFor(cls,T){
   const dom=CLASSES[cls].domain;
@@ -676,7 +715,7 @@ function bestYawAt(pos,dom,reach){
 // ---------- preview (menu) ----------
 function setPreview(){
   if(preview){disposeModel(preview.model);preview=null;}
-  const T=CLASSES[S.cls].types[S.type];const built=buildPlayerModel(S.cls,T);
+  const T=CLASSES[S.cls].types[S.type];const built=buildPlayerModel(S.cls,T,(PAINTS[S.paint]||PAINTS.std).col);
   const p={model:built.g,parts:built,yaw:0,pos:spawnPointFor(S.cls,T),cls:S.cls,T};
   const dom=CLASSES[S.cls].domain;
   if(dom!=='air')p.yaw=bestYawAt(p.pos,dom,300);
@@ -697,19 +736,24 @@ function updatePreview(dt,t){
 
 // ---------- player ----------
 function createPlayer(){
-  const C=CLASSES[S.cls],T=C.types[S.type];
-  const built=buildPlayerModel(S.cls,T);
+  const C=CLASSES[S.cls],PT=PAINTS[S.paint]||PAINTS.std;
+  const pm=Object.assign({hp:1,speed:1,turn:1,dmg:1,acc:1,skillCd:1,score:1,evade:0},PT.m);
+  const T=Object.assign({},C.types[S.type]);
+  T.hp=Math.round(T.hp*pm.hp);if(T.speed)T.speed*=pm.speed;if(T.min){T.min*=pm.speed;T.max*=pm.speed;}T.turn*=pm.turn;
+  T.gunDmg=(T.gunDmg||1)*pm.dmg;T.skillCd=(T.skillCd||1)*pm.skillCd;
+  const built=buildPlayerModel(S.cls,T,PT.col);
   const p={team:'player',isPlayer:true,cls:S.cls,T,alive:true,hp:T.hp,maxHp:T.hp,pos:spawnPointFor(S.cls,T),yaw:0,speed:0,throttle:0,
     model:built.g,parts:built,domain:C.domain,flare:0,smoke:0,aps:0,boost:0,repairT:0,name:T.name};
   scene.add(p.model);computeBox(p);
   if(p.domain==='land'){p.camDist=20*(T.scale||1);p.eye=3.6*(T.scale||1);p.yaw=Math.atan2(-p.pos.x,-p.pos.z);}
   else if(p.domain==='sea'){p.camDist=T.len*1.05+22;p.eye=T.len*.17;p.yaw=bestYawAt(p.pos,'sea',400);}
   else{p.camDist=32;p.eye=2.5;p.pos.set(0,380,0);p.yaw=0;p.q=new Q4().setFromAxisAngle(UP,p.yaw);p.speed=lerp(T.min,T.max,.55);p.throttle=.55;}
-  p.w=(T.weapons||C.weapons).map(id=>{const d=WEAPONS[id];let ammo=d.ammo;if(isFinite(ammo)){if(T.ammo&&typeof T.ammo==='object')ammo=T.ammo[id]!=null?T.ammo[id]:ammo;else ammo=Math.max(1,Math.round(ammo*(T.ammo||1)));}return {id,def:d,ammo,max:ammo,cd:0,regen:0};});
+  p.w=(T.weapons||C.weapons).map(id=>{const d=WEAPONS[id];let ammo=d.ammo;if(isFinite(ammo)){if(T.ammo&&typeof T.ammo==='object')ammo=T.ammo[id]!=null?T.ammo[id]:ammo;else ammo=Math.max(1,Math.round(ammo*(T.ammo||1)));}const RT={asm:9,sam:7,cruise:12,atgm:8,sam_t:7,aam:7,agm:9,bomb:10};return {id,def:d,ammo,max:ammo,cd:0,reload:0,rt:RT[id]||8};});
   p.wi=0;
   p.sk=C.skills.map(id=>({id,def:SKILLS[id],cd:0}));
   p.cd2={ciws:0,salvo:0};
   p.si=0;
+  p.paintMod=pm;p.paintName=PT.name;
   return p;
 }
 
@@ -806,7 +850,7 @@ function chooseTarget(u){
   for(const e of G.enemies){if(!e.alive)continue;let d=e.pos.distanceTo(u.pos);if(u.role==='fighter'&&e.domain!=='air')d*=3;if(u.role==='bomber'&&e.domain==='air')continue;if(d<bd){bd=d;best=e;}}
   return best;
 }
-function eSpread(){const p=G.player;return DIFF.acc*(p&&p.smoke>0?3:1)*(p&&p.T.stealth?1.35:1);}
+function eSpread(){const p=G.player;return DIFF.acc*(p&&p.smoke>0?3:1)*(p&&p.T.stealth?1.35:1)*(p&&p.paintMod?p.paintMod.acc:1);}
 function aimTurret(t,unitYaw,target,rate,dt){
   t.tur.getWorldPosition(_a);
   const want=Math.atan2(target.x-_a.x,target.z-_a.z)-unitYaw;
@@ -1016,6 +1060,7 @@ function segHitsUnit(a,b,u){
 function targetsFor(team){if(team==='enemy'){const l=G.allies.slice();if(G.player&&G.player.alive)l.push(G.player);return l;}return G.enemies;}
 function steerMissile(p,dt){
   const pl=G.player;
+  if(p.team==='enemy'&&p.target===pl&&pl&&!p.paintChk){p.paintChk=true;if(pl.paintMod&&Math.random()<pl.paintMod.evade){p.target=null;p.aimPt=pl.c.clone().add(rv(60));}}
   if(p.team==='enemy'&&p.target===pl&&pl&&(pl.flare>0||pl.smoke>0)&&!p.decoyed){p.decoyed=true;if(Math.random()<.9){p.target=null;p.aimPt=null;}}
   if(p.age<p.delay){p.vel.y-=6*dt;return;}
   let goal=null;
@@ -1083,7 +1128,7 @@ function kill(u,src){
   if(!u.alive)return;u.alive=false;u.hp=0;
   explode(u.c,Math.min(26,6+u.r*.7));
   if(u.team==='enemy'){
-    const sc=Math.round(u.K.score*(1+G.wave*.1));
+    const sc=Math.round(u.K.score*(1+G.wave*.1)*(G.player&&G.player.paintMod?G.player.paintMod.score:1));
     if(src&&src.fromPlayer){G.score+=sc;G.kills++;pushFeed(`${u.name} 격파 +${sc}`);}else{G.score+=Math.round(sc*.5);pushFeed(`${u.name} 격파 (지원) +${Math.round(sc*.5)}`);}
   }
   makeWreck(u);
@@ -1152,7 +1197,9 @@ function updatePlayer(dt){
   const oob=Math.max(Math.abs(p.pos.x),Math.abs(p.pos.z))>HALF*(p.domain==='air'?1.05:.98);
   if(oob){p.oob=(p.oob||0)+dt;if(p.oob>4)damage(p,p.maxHp*.04*dt,null);}else p.oob=0;
   // weapons timers & regen
-  for(const w of p.w){w.cd=Math.max(0,w.cd-dt);if(isFinite(w.max)&&w.ammo<w.max){w.regen+=dt;if(w.regen>22){w.regen=0;w.ammo++;}}}
+  for(const w of p.w){w.cd=Math.max(0,w.cd-dt);
+    if(w.reload>0){w.reload-=dt;if(w.reload<=0){w.reload=0;w.ammo=w.max;pushFeed(`${w.def.name} 재장전 완료`);}}
+    else if(isFinite(w.max)&&w.ammo<=0&&S.reload!=='manual'){w.reload=w.rt;pushFeed(`${w.def.name} 재장전 시작 (${w.rt}초)`);}}
   for(const s of p.sk)s.cd=Math.max(0,s.cd-dt);
 }
 function updateJet(p,dt,ax){
@@ -1238,6 +1285,7 @@ function updateTurrets(dt){
 }
 
 // ---------- firing ----------
+function reloadWeapon(w){if(!w||!isFinite(w.max)||w.reload>0||w.ammo>=w.max)return;w.reload=w.rt;pushFeed(`${w.def.name} 재장전 시작 (${w.rt}초)`);}
 function selWeapon(i){const p=G.player;if(!p||i<0||i>=p.w.length)return;p.wi=i;G.lockT=0;G.lockCand=null;}
 function surfaceTargetsSorted(from,max){return G.enemies.filter(e=>e.alive&&e.domain!=='air').sort((a,b)=>a.pos.distanceTo(from)-b.pos.distanceTo(from)).slice(0,max);}
 function fireWeapon(){
@@ -1265,7 +1313,7 @@ function fireWeapon(){
         else{p.parts.turrets[0].tur.getWorldPosition(_a);_a.y+=1.6*(T.scale||1);}
         from=_a;let tgtPt=G.aim;
         if(D.autoAir){let best=null,ba=.2;const cd=_cf;for(const e of G.enemies){if(!e.alive||e.domain!=='air')continue;const v=_c.copy(e.c).sub(camera.position);if(v.length()>D.range+200)continue;const a=v.normalize().angleTo(cd);if(a<ba){ba=a;best=e;}}if(best)tgtPt=leadPt(from,best,D.speed,_d);}
-        const dir=_b.copy(tgtPt).sub(from).normalize();spawnBullet('player',from,dir,D.speed,D.dmg,D.spread,!!D.flak,null,D.range);
+        const dir=_b.copy(tgtPt).sub(from).normalize();spawnBullet('player',from,dir,D.speed,D.dmg*p.paintMod.dmg,D.spread,!!D.flak,null,D.range);
         if(Math.random()<.5)fx(true,_e.copy(from).addScaledVector(dir,1),null,1.6,0,.06,0xffe0a0,1);
       }
       w.cd=D.cd;break;}
@@ -1275,13 +1323,13 @@ function fireWeapon(){
       else if(p.domain==='land'){p.parts.turrets[0].tur.getWorldPosition(_a);_a.y+=1.4*(T.scale||1);from=_a;dir=_b.copy(G.aim).sub(from).normalize();dir.y+=.15;dir.normalize();}
       else{p.parts.vls.getWorldPosition(_a);from=_a;dir=_b.set(0,1,0);}
       const aimPt=G.aim.clone();
-      const o={target:lk,aimPt,speed:D.speed,turn:D.turn,dmg:D.dmg,blast:D.blast,cruise:D.kind==='cruise',delay:p.domain==='sea'?.35:0,inherit:p.domain==='air'?_c.copy(p.vel).add(_d.set(0,-6,0)):null};
+      const o={target:lk,aimPt,speed:D.speed,turn:D.turn,dmg:D.dmg*p.paintMod.dmg,blast:D.blast,cruise:D.kind==='cruise',delay:p.domain==='sea'?.35:0,inherit:p.domain==='air'?_c.copy(p.vel).add(_d.set(0,-6,0)):null};
       if(p.domain==='air'&&D.kind==='missile'&&!lk&&D.target==='air')o.aimPt=null;
       spawnMissile('player',from,dir,o);
       fx(false,from,_e.set(0,2,0),4,6,1.6,0xdcdcd6,.7);
       w.ammo--;w.cd=D.cd;break;}
     case 'bomb':{
-      p.parts.muzzle.getWorldPosition(_a);_a.y-=2.5;spawnBomb('player',_a,p.vel,D.dmg,D.blast,lk);w.ammo--;w.cd=D.cd;break;}
+      p.parts.muzzle.getWorldPosition(_a);_a.y-=2.5;spawnBomb('player',_a,p.vel,D.dmg*p.paintMod.dmg,D.blast,lk);w.ammo--;w.cd=D.cd;break;}
   }
 }
 function useSkill(i){
@@ -1309,9 +1357,9 @@ function useSkill(i){
 // ================= HUD =================
 function buildHUD(){
   const p=G.player,we=$('#weapons'),se=$('#skills');we.innerHTML='';se.innerHTML='';
-  p.w.forEach((w,i)=>{const b=document.createElement('button');b.type='button';b.className='slot';b.innerHTML=`<span class="k">${i+1}</span><span class="n"></span><span class="s"></span><span class="a"></span><i class="cd"></i>`;b.querySelector('.n').textContent=w.def.name;b.querySelector('.s').textContent=w.def.sub;b.addEventListener('pointerdown',e=>{e.stopPropagation();selWeapon(i);});w.el=b;we.append(b);});
+  p.w.forEach((w,i)=>{const b=document.createElement('button');b.type='button';b.className='slot';b.innerHTML=`<span class="k">${i+1}</span><span class="n"></span><span class="s"></span><span class="a"></span><i class="cd"></i>`;b.querySelector('.n').textContent=w.def.name;b.querySelector('.s').textContent=w.def.sub;b.addEventListener('pointerdown',e=>{e.stopPropagation();if(G.player.wi===i)reloadWeapon(w);selWeapon(i);});w.el=b;we.append(b);});
   p.sk.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='sk';b.innerHTML=`<span class="k">${'QER'[i]}</span><span class="n"></span><i class="ov"></i><span class="t"></span>`;b.querySelector('.n').textContent=s.def.name;b.title=s.def.desc;b.addEventListener('pointerdown',e=>{e.stopPropagation();useSkill(i);});s.el=b;se.append(b);});
-  $('#hName').textContent=`${p.T.name} · ${CLASSES[p.cls].name}`;
+  $('#hName').textContent=`${p.T.name} · ${CLASSES[p.cls].name}`+(S.paint!=='std'?` · ${p.paintName}`:'');
 }
 let hudT=0;
 function updateHUD(dt){
@@ -1328,7 +1376,9 @@ function updateHUD(dt){
   else if(p.domain==='sea')s1=`<span>${(Math.abs(p.speed)*1.94/1.2).toFixed(0)} 노트 · 속도 단계 <b>${p.throttle<-.05?'후진':Math.round(p.throttle*100)+'%'}</b></span>`;
   else s1=`<span>속도 <b>${Math.round(Math.abs(p.speed)*3.6)} km/h</b></span>`;
   $('#hS1').innerHTML=s1;
-  p.w.forEach((w,i)=>{w.el.classList.toggle('on',i===p.wi);w.el.classList.toggle('empty',w.ammo<=0);w.el.querySelector('.a').textContent=isFinite(w.ammo)?w.ammo:'∞';const tot=w.def.cd*((w.def.kind==='shell'&&p.T.gunCd)||1);w.el.querySelector('.cd').style.width=(w.cd>0?(1-w.cd/tot)*100:0)+'%';});
+  p.w.forEach((w,i)=>{w.el.classList.toggle('on',i===p.wi);w.el.classList.toggle('empty',w.ammo<=0);w.el.classList.toggle('rl',w.reload>0);
+    if(w.reload>0){w.el.querySelector('.a').textContent='재장전 '+Math.ceil(w.reload)+'초';w.el.querySelector('.cd').style.width=((1-w.reload/w.rt)*100)+'%';}
+    else{w.el.querySelector('.a').textContent=!isFinite(w.ammo)?'∞':w.ammo<=0?'F키 재장전':w.ammo+' / '+w.max;const tot=w.def.cd*((w.def.kind==='shell'&&p.T.gunCd)||1);w.el.querySelector('.cd').style.width=(w.cd>0?(1-w.cd/tot)*100:0)+'%';}});
   p.sk.forEach((s,i)=>{s.el.classList.toggle('sel',i===p.si);const tot=s.def.cd*(p.T.skillCd||1);s.el.querySelector('.ov').style.height=(s.cd/tot*100)+'%';s.el.querySelector('.t').textContent=s.cd>0?Math.ceil(s.cd):'';s.el.classList.toggle('ready',s.cd<=0);const act=(s.id==='repair'&&p.repairT>0)||(s.id==='smoke'&&p.smoke>0)||(s.id==='aps'&&p.aps>0)||(s.id==='flare'&&p.flare>0)||(s.id==='afterburner'&&p.boost>0);s.el.classList.toggle('act',act);});
   // warnings
   let warn='';
@@ -1413,7 +1463,9 @@ function drawOverlay(dt){
   else if(w.def.kind==='shell'){c.moveTo(cx-18,cy);c.lineTo(cx-6,cy);c.moveTo(cx+6,cy);c.lineTo(cx+18,cy);c.moveTo(cx,cy+6);c.lineTo(cx,cy+16);}
   else{c.rect(cx-10,cy-10,20,20);c.moveTo(cx-24,cy);c.lineTo(cx-14,cy);c.moveTo(cx+14,cy);c.lineTo(cx+24,cy);}
   c.stroke();
-  if(w.cd>0){const tot=w.def.cd*((w.def.kind==='shell'&&p.T.gunCd)||1);c.strokeStyle='#f3b23a';c.lineWidth=2.5;c.beginPath();c.arc(cx,cy,24,-Math.PI/2,-Math.PI/2+TAU*(1-w.cd/tot));c.stroke();}
+  if(w.reload<=0&&isFinite(w.max)&&w.ammo<=0){c.fillStyle='#ff5a44';c.font='14px "IBM Plex Sans KR", sans-serif';c.fillText(isTouch?'탄약 없음 · 무기 칸을 한 번 더 눌러 재장전':'탄약 없음 · F키를 눌러 재장전',cx,cy+48);c.font='12px "Share Tech Mono", monospace';}
+  if(w.reload>0){c.strokeStyle='#82d6ff';c.lineWidth=3;c.beginPath();c.arc(cx,cy,26,-Math.PI/2,-Math.PI/2+TAU*(1-w.reload/w.rt));c.stroke();c.fillStyle='#82d6ff';c.font='14px "IBM Plex Sans KR", sans-serif';c.fillText('재장전 '+w.reload.toFixed(1)+'초',cx,cy+48);c.font='12px "Share Tech Mono", monospace';}
+  else if(w.cd>0){const tot=w.def.cd*((w.def.kind==='shell'&&p.T.gunCd)||1);c.strokeStyle='#f3b23a';c.lineWidth=2.5;c.beginPath();c.arc(cx,cy,24,-Math.PI/2,-Math.PI/2+TAU*(1-w.cd/tot));c.stroke();}
   // target range
   if(p.domain!=='air'){const d=G.aim.distanceTo(p.pos);c.fillStyle='rgba(226,234,191,.8)';c.fillText(d<1000?Math.round(d)+'m':(d/1000).toFixed(2)+'km',cx+44,cy+4);}
   // nose reticle for jets
@@ -1452,7 +1504,7 @@ function frame(now){
   // waves
   if(G.state==='play'){
     if(G.waveActive&&G.enemies.length===0&&!G.sched.length){G.waveActive=false;G.inter=7;
-      p.hp=Math.min(p.maxHp,p.hp+p.maxHp*.25);for(const w of p.w)w.ammo=w.max;
+      p.hp=Math.min(p.maxHp,p.hp+p.maxHp*.25);for(const w of p.w){w.ammo=w.max;w.reload=0;}
       G.score+=G.wave*200;banner(`웨이브 ${G.wave} 완료`,'보너스 +'+(G.wave*200)+' · 내구도 25% 수리, 탄약 보급',3);}
     if(!G.waveActive){G.inter-=dt;if(G.inter<=0)startWave(G.wave+1);}
   }
@@ -1483,6 +1535,7 @@ addEventListener('keydown',e=>{
   if(/^Digit[1-4]$/.test(e.code))selWeapon(+e.code.slice(5)-1);
   if(e.code==='KeyQ')useSkill(0);if(e.code==='KeyE')useSkill(1);if(e.code==='KeyR')useSkill(2);
   if(e.code==='Tab'&&G.player){e.preventDefault();const n=G.player.sk.length;G.player.si=(G.player.si+(e.shiftKey?n-1:1))%n;}
+  if(e.code==='KeyF'&&G.player)reloadWeapon(G.player.w[G.player.wi]);
   if(e.code==='Space'&&G.player){e.preventDefault();if(!e.repeat)useSkill(G.player.si);}
   if(e.code==='KeyC'){G.camScale=G.camScale===1?1.6:G.camScale===1.6?.75:1;}
 });
@@ -1544,6 +1597,14 @@ function renderMenu(){
     const bars=['내구','기동','화력'].map((l,j)=>`<span class="bar"><em>${l}</em>${[1,2,3,4,5].map(v=>`<i class="${v<=T.bars[j]?'on':''}"></i>`).join('')}</span>`).join('');
     b.innerHTML=`<span class="nm"></span><span class="sp"></span><span class="bars">${bars}</span>`;b.querySelector('.nm').textContent=T.name;b.querySelector('.sp').textContent=T.spec;
     b.addEventListener('click',()=>{S.type=i;renderMenu();setPreview();});tl.append(b);});
+  if(!PAINTS[S.paint])S.paint='std';
+  const pl=$('#paintList');pl.innerHTML='';
+  for(const k of Object.keys(PAINTS)){const P=PAINTS[k];const col=P.col==null?DEFCOL[S.cls]:P.col;const b=document.createElement('button');b.type='button';b.className='pbtn';b.setAttribute('aria-pressed',S.paint===k);
+    b.innerHTML='<i></i><span></span>';b.querySelector('i').style.background='#'+col.toString(16).padStart(6,'0');b.querySelector('span').textContent=P.name;b.title=paintEffects(P).map(e=>e[0]).join(', ')||'효과 없음';
+    b.addEventListener('click',()=>{S.paint=k;renderMenu();setPreview();});pl.append(b);}
+  const pf=$('#paintFx');pf.innerHTML='';const fxs=paintEffects(PAINTS[S.paint]);
+  if(!fxs.length){const s=document.createElement('span');s.textContent='능력치 변화 없음';pf.append(s);}
+  for(const [t,g] of fxs){const s=document.createElement('span');s.className=g?'up':'dn';s.textContent=t;pf.append(s);}
   const T=C.types[S.type];const lo=$('#loadout');lo.innerHTML='';
   (T.weapons||C.weapons).forEach((id,i)=>{const d=WEAPONS[id];const r=document.createElement('div');r.className='lo';r.innerHTML=`<kbd>${i+1}</kbd><span><span class="n"></span> <small></small></span>`;r.querySelector('.n').textContent=d.name;r.querySelector('small').textContent=d.sub;lo.append(r);});
   C.skills.forEach((id,i)=>{const d=SKILLS[id];const r=document.createElement('div');r.className='lo';r.innerHTML=`<kbd>${'QER'[i]}</kbd><span><span class="n"></span> <small></small></span>`;r.querySelector('.n').textContent=d.name;r.querySelector('small').textContent=d.desc;lo.append(r);});
@@ -1551,6 +1612,8 @@ function renderMenu(){
   seg($('#optTime'),TIMES,'time',()=>{buildWorld();setPreview();});
   seg($('#optSize'),SIZES,'size',()=>{buildWorld();setPreview();});
   seg($('#optDiff'),DIFFS,'diff');
+  if(!RELOADS[S.reload])S.reload='auto';
+  seg($('#optReload'),RELOADS,'reload');
   const b=getBest()[S.cls];
   $('#bestLine').textContent=b?`${C.name} 최고 기록 · 웨이브 ${b.wave} · ${b.score.toLocaleString('ko-KR')}점`:`${C.name} 기록 없음`;
 }
