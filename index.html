@@ -333,6 +333,7 @@ const DIFFS={easy:{name:'쉬움',hp:.75,dmg:.55,count:.8,acc:1.6},normal:{name:'
 const EK={
   tank:{name:'적 전차',domain:'land',hp:260,speed:11,score:100},
   heavytank:{name:'적 중전차',domain:'land',hp:1800,speed:7,score:1500,boss:true},
+  ecarrier:{name:'적 항공모함',domain:'sea',hp:1600,speed:9,score:900},
   boat:{name:'적 호위함',domain:'sea',hp:380,speed:15,score:120},
   bigship:{name:'적 순양함',domain:'sea',hp:2600,speed:10,score:2000,boss:true},
   jet:{name:'적 전투기',domain:'air',hp:150,speed:175,score:150},
@@ -788,12 +789,16 @@ function toMenu(){
 }
 function waveComposition(n){
   const cls=G.player.cls;let total=Math.min(30,Math.round((3+n*1.7)*DIFF.count));
-  const W={ship:{boat:.42,jet:.2,heli:.16,battery:.12,tank:.1},carrier:{boat:.4,jet:.32,heli:.16,battery:.12},tank:{tank:.5,heli:.2,jet:.15,battery:.1,boat:.05},jet:{jet:.36,tank:.2,boat:.2,aa:.14,heli:.1}}[cls];
+  const MAIN={ship:{boat:1},carrier:{ecarrier:.3,boat:.7},tank:{tank:1},jet:{jet:1}}[cls];
+  const OTHER={ship:{jet:.35,heli:.3,battery:.35},carrier:{jet:.4,heli:.3,battery:.3},tank:{heli:.4,jet:.3,battery:.3},jet:{tank:.3,boat:.3,aa:.25,heli:.15}}[cls];
+  const share=rand(.8,1);
+  const wpick=W=>{const ks=Object.keys(W);let r=Math.random(),acc=0;for(const k of ks){acc+=W[k];if(r<=acc)return k;}return ks[0];};
   const list=[];
   if(n%5===0){const boss=cls==='tank'?'heavytank':cls==='jet'?'bomber':'bigship';const nb=Math.min(4,1+Math.floor(n/10));for(let i=0;i<nb;i++)list.push(boss);total=Math.max(2,total-4*nb);}
-  const keys=Object.keys(W);
-  for(let i=0;i<total;i++){let r=Math.random(),acc=0,k=keys[0];for(const kk of keys){acc+=W[kk];if(r<=acc){k=kk;break;}}list.push(k);}
-  if(n===1&&cls!=='jet'){/* gentler opener */}
+  const nMain=Math.round(total*share);let carriers=0;const maxCv=Math.min(3,1+Math.floor(n/4));
+  for(let i=0;i<total;i++){let k=i<nMain?wpick(MAIN):wpick(OTHER);if(k==='ecarrier'){if(carriers>=maxCv)k='boat';else carriers++;}list.push(k);}
+  for(let i=list.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=list[i];list[i]=list[j];list[j]=t;}
+  list.mainPct=Math.round(nMain/Math.max(1,total)*100);
   return list;
 }
 function startWave(n){
@@ -803,19 +808,21 @@ function startWave(n){
   const list=waveComposition(n);
   list.forEach((k,i)=>G.sched.push({t:i*.35,fn:()=>spawnEnemy(k,n)}));
   const boss=list.some(k=>EK[k].boss);
-  banner(`웨이브 ${n}`,boss?'대형 표적 접근 중':`적 ${list.length}기 접근`,2.6);
+  const mainName={ship:'적 함선',carrier:'적 항모 함대',tank:'적 전차',jet:'적 전투기'}[G.player.cls];
+  banner(`웨이브 ${n}`,(boss?'대형 표적 접근 · ':'')+`적 ${list.length}기 접근 · ${mainName} ${list.mainPct}%`,2.6);
 }
 
 // ================= ENEMIES =================
-function spawnEnemy(kind,n){
+function spawnEnemy(kind,n,at){
   if(!G.player)return;
   const K=EK[kind],pp=G.player.pos;let dom=K.domain,pos=null;
-  if(dom==='air'){
+  if(at){pos=at.clone();}
+  else if(dom==='air'){
     const a=Math.random()*TAU,r=rand(1100,1700);
     pos=new V3(clamp(pp.x+Math.sin(a)*r,-HALF,HALF),0,clamp(pp.z+Math.cos(a)*r,-HALF,HALF));
     pos.y=Math.max(height(pos.x,pos.z),0)+(kind==='heli'?70:rand(250,520));
   }else{
-    const clr=dom==='sea'?(kind==='bigship'?50:22):0;
+    const clr=dom==='sea'?(kind==='bigship'||kind==='ecarrier'?55:22):0;
     pos=findSpot(dom,pp.x,pp.z,650,1300,160,clr)||findSpot(dom,pp.x,pp.z,250,HALF*2,400,clr);
     if(!pos){return spawnEnemy(kind==='bigship'||kind==='heavytank'?'bomber':Math.random()<.6?'jet':'heli',n);}
   }
@@ -825,6 +832,7 @@ function spawnEnemy(kind,n){
     case 'heavytank':b=makeTank(0x553429,'heavy',1.6);break;
     case 'boat':b=makeShip(34,1,0x5e5856,{barrels:1});break;
     case 'bigship':b=makeShip(82,3,0x4c4848,{barrels:2});break;
+    case 'ecarrier':b=makeCarrier(84,0x55504c);break;
     case 'jet':b=makeJet(0x6a5250,'f16',1);break;
     case 'heli':b=makeHeli(0x5b5a44);break;
     case 'bomber':b=makeJet(0x4a4646,'bomber',2.4);break;
@@ -894,8 +902,9 @@ function updateEnemy(e,dt){
     const k=e.kind;const dist=Math.hypot(t.pos.x-e.pos.x,t.pos.z-e.pos.z);
     if(k==='tank'||k==='heavytank'){
       moveSurface(e,dt,t.pos,k==='heavytank'?500:330);placeGround(e,3.5*(k==='heavytank'?1.6:1),1.8);
-    }else if(k==='boat'||k==='bigship'){
-      moveSurface(e,dt,t.pos,k==='bigship'?700:480);e.pos.y=Math.sin(G.time*.9+e.side)*.3;e.model.position.copy(e.pos);e.model.rotation.set(0,e.yaw,Math.sin(G.time*.7)*.02,'YXZ');
+    }else if(k==='boat'||k==='bigship'||k==='ecarrier'){
+      if(k==='ecarrier'){e.launchT=(e.launchT==null?rand(4,7):e.launchT)-dt;if(e.launchT<=0&&(e.launched||0)<4){e.launched=(e.launched||0)+1;e.launchT=rand(10,14);e.parts.launch.getWorldPosition(_a);_a.y+=6;spawnEnemy('jet',G.wave,_a);pushFeed('적 항공모함에서 전투기 발진');}}
+      moveSurface(e,dt,t.pos,k==='bigship'?700:k==='ecarrier'?950:480);e.pos.y=Math.sin(G.time*.9+e.side)*.3;e.model.position.copy(e.pos);e.model.rotation.set(0,e.yaw,Math.sin(G.time*.7)*.02,'YXZ');
       if(Math.random()<dt*8)fx(false,_a.set(e.pos.x-Math.sin(e.yaw)*e.half.z,.5,e.pos.z-Math.cos(e.yaw)*e.half.z),_b.set(0,.5,0),3,4,2.5,0xeef3f4,.55);
     }else{e.pos.y=height(e.pos.x,e.pos.z);e.model.position.copy(e.pos);e.model.rotation.y=e.yaw;}
     syncUnit(e);
@@ -913,19 +922,19 @@ function updateEnemy(e,dt){
         for(const mz of tt.muzzles){mz.getWorldPosition(_a);const lp2=leadPt(_a,t,gunSpd,_d);
           const ang=ballistic(_a,lp2,gunSpd,grav);const v=velFromAng(_a,lp2,gunSpd,ang,_e);
           v.x+=rand(-1,1)*.018*gunSpd*sp;v.y+=rand(-1,1)*.012*gunSpd*sp;v.z+=rand(-1,1)*.018*gunSpd*sp;
-          const dmg={tank:60,heavytank:120,boat:45,bigship:80,battery:80}[k]*DIFF.dmg;
+          const dmg={tank:60,heavytank:120,boat:45,bigship:80,battery:80,ecarrier:40}[k]*DIFF.dmg;
           spawnShell('enemy',_a,v,dmg,k==='tank'?5:10,grav,k==='bigship'?1.4:1);muzzleFlash(_a,v);}
       }
-      e.cd.gun={tank:rand(3.5,5),heavytank:3,boat:rand(2.6,3.4),bigship:2.2,battery:rand(4,5.2)}[k];
+      e.cd.gun={tank:rand(3.5,5),heavytank:3,boat:rand(2.6,3.4),bigship:2.2,battery:rand(4,5.2),ecarrier:rand(3,4)}[k];
     }
-    if(air&&dist<1100&&(k==='boat'||k==='bigship'||k==='aa'||(t.pos.y-height(t.pos.x,t.pos.z)<220&&dist<750))&&e.cd.mg<=0){
+    if(air&&dist<1100&&(k==='boat'||k==='bigship'||k==='ecarrier'||k==='aa'||(t.pos.y-height(t.pos.x,t.pos.z)<220&&dist<750))&&e.cd.mg<=0){
       e.c.y+=2;const lp3=leadPt(e.c,t,900,_d);const dir=_e.copy(lp3).sub(e.c).normalize();
       spawnBullet('enemy',e.c,dir,900,(k==='aa'?6:3.5)*DIFF.dmg,.03*sp,k!=='tank',null);
       e.cd.mg=k==='bigship'?.08:k==='aa'?.1:.14;
     }
     const stealth=t.T&&t.T.stealth;
     if(e.cd.msl<=0){
-      if(air&&(k==='aa'||k==='bigship'||k==='boat')&&dist<2300&&(!stealth||Math.random()<.4)){spawnMissile('enemy',_a.copy(e.c).setY(e.c.y+3),_b.set(0,1,0),{target:t,speed:330,turn:2.4,dmg:(k==='aa'?100:80)*DIFF.dmg,blast:8});e.cd.msl=rand(6,9)*(stealth?1.6:1);}
+      if(air&&(k==='aa'||k==='bigship'||k==='boat'||k==='ecarrier')&&dist<2300&&(!stealth||Math.random()<.4)){spawnMissile('enemy',_a.copy(e.c).setY(e.c.y+3),_b.set(0,1,0),{target:t,speed:330,turn:2.4,dmg:(k==='aa'?100:80)*DIFF.dmg,blast:8});e.cd.msl=rand(6,9)*(stealth?1.6:1);}
       else if(!air&&t.domain==='sea'&&(k==='boat'||k==='bigship')&&dist<2600){spawnMissile('enemy',_a.copy(e.c).setY(e.c.y+3),_b.set(Math.sin(e.yaw),.6,Math.cos(e.yaw)).normalize(),{target:t,speed:220,turn:1.6,dmg:170*DIFF.dmg,blast:12});e.cd.msl=rand(12,16);}
       else e.cd.msl=2;
     }
