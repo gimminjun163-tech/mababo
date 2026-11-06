@@ -334,7 +334,7 @@ const TERRAINS={
 };
 const TIMES={day:{name:'낮'},dusk:{name:'노을'},night:{name:'밤'}};
 const SIZES={small:{name:'작게',size:2400},normal:{name:'보통',size:3200},large:{name:'넓게',size:4400}};
-const DIFFS={easy:{name:'쉬움',hp:.75,dmg:.55,count:.8,acc:1.6},normal:{name:'보통',hp:1,dmg:1,count:1,acc:1},hard:{name:'어려움',hp:1.3,dmg:1.5,count:1.3,acc:.65}};
+const DIFFS={veryeasy:{name:'아주 쉬움',hp:.5,dmg:.3,count:.6,acc:2.4,mslSkip:.5,mturn:.6,crash:.15,lowAlt:true},easy:{name:'쉬움',hp:.75,dmg:.55,count:.8,acc:1.6},normal:{name:'보통',hp:1,dmg:1,count:1,acc:1},hard:{name:'어려움',hp:1.3,dmg:1.5,count:1.3,acc:.65}};
 const EK={
   tank:{name:'적 전차',domain:'land',hp:260,speed:11,score:100},
   heavytank:{name:'적 중전차',domain:'land',hp:1800,speed:7,score:1500,boss:true},
@@ -1101,6 +1101,7 @@ function spawnShell(team,from,vel,dmg,blast,grav,scale,rocket){
   addProj({kind:'shell',geo:rocket?'missile':'shell',mat:rocket?(team==='enemy'?PM.emissile:PM.missile):(team==='enemy'?PM.eshell:PM.pshell),pos:from.clone(),vel:vel.clone(),dmg,blast,grav,life:14,team,fromPlayer:team==='player',scale:scale||1,trail:rocket});
 }
 function spawnMissile(team,from,dir,o){
+  if(team==='enemy'&&DIFF.mslSkip&&Math.random()<DIFF.mslSkip)return null;
   const p=addProj({kind:o.cruise?'cruise':'missile',geo:o.cruise?'cruise':'missile',mat:team==='enemy'?PM.emissile:PM.missile,pos:from.clone(),
     dir:dir.clone().normalize(),spd:o.speed*.35,maxSpd:o.speed,turn:o.turn||2,target:o.target||null,aimPt:o.aimPt?o.aimPt.clone():null,dmg:o.dmg,blast:o.blast||10,life:o.cruise?30:12,team,fromPlayer:team==='player',
     vel:new V3(),inherit:o.inherit?o.inherit.clone():null,delay:o.delay||0,trail:true,cruise:o.cruise});
@@ -1141,7 +1142,7 @@ function steerMissile(p,dt){
       const hd=Math.hypot(des.x,des.z);
       if(hd>240){const ahead=Math.max(height(p.pos.x+p.dir.x*120,p.pos.z+p.dir.z*120),height(p.pos.x,p.pos.z),0)+45;des.set(des.x/hd,clamp((ahead-p.pos.y)/60,-.5,.6),des.z/hd);}
       rotateToward(p.dir,des.normalize(),(hd>240?1.4:3.2)*dt);
-    }else rotateToward(p.dir,des.normalize(),p.turn*dt);
+    }else rotateToward(p.dir,des.normalize(),p.turn*(p.team==='enemy'&&DIFF.mturn?DIFF.mturn:1)*dt);
   }
   p.vel.copy(p.dir).multiplyScalar(p.spd);if(p.inherit)p.vel.add(p.inherit);
 }
@@ -1265,7 +1266,7 @@ function updatePlayer(dt){
   if(p.domain!=='air'){p.vel.copy(p.pos).sub(p.prev).divideScalar(Math.max(dt,1e-4));}
   // boundary
   const oob=Math.max(Math.abs(p.pos.x),Math.abs(p.pos.z))>HALF*(p.domain==='air'?1.05:.98);
-  if(oob){p.oob=(p.oob||0)+dt;if(p.oob>4)damage(p,p.maxHp*.04*dt,null);}else p.oob=0;
+  if(oob){p.oob=(p.oob||0)+dt;if(p.oob>4&&!DIFF.lowAlt)damage(p,p.maxHp*.04*dt,null);}else p.oob=0;
   // weapons timers & regen
   for(const w of p.w){w.cd=Math.max(0,w.cd-dt);
     if(w.reload>0){w.reload-=dt;if(w.reload<=0){w.reload=0;w.ammo=w.max;pushFeed(`${w.def.name} 재장전 완료`);}}
@@ -1279,6 +1280,8 @@ function updateJet(p,dt,ax){
   const tgt=lerp(T.min,T.max,p.throttle)*(boost?1.55:1)-fwd.y*40;
   p.speed+=clamp(tgt-p.speed,-40*dt,(boost?90:45)*dt);
   const aim=aimDir(_b);
+  if(DIFF.lowAlt){const la=p.speed*2.5;const ga=Math.max(height(p.pos.x+fwd.x*la,p.pos.z+fwd.z*la),height(p.pos.x+fwd.x*la*.5,p.pos.z+fwd.z*la*.5),height(p.pos.x,p.pos.z),0);const agl=p.pos.y-ga;if(agl<160&&aim.y<.3){aim.y=lerp(.3,aim.y,clamp((agl-40)/120,0,1));aim.normalize();}
+    if(Math.max(Math.abs(p.pos.x),Math.abs(p.pos.z))>HALF*.92){const want=Math.atan2(-p.pos.x,-p.pos.z);G.camYaw+=angDiff(G.camYaw,want)*Math.min(1,dt*1.8);}}
   const qi=_q1.copy(p.q).invert();
   const d=_c.copy(aim).applyQuaternion(qi);
   const tr=T.turn*(boost?1.2:1)*clamp(p.speed/150,.55,1.15);
@@ -1298,7 +1301,8 @@ function updateJet(p,dt,ax){
   p.pos.addScaledVector(p.vel,dt);
   if(p.pos.y>2600)p.pos.y=2600;
   let g=Math.max(height(p.pos.x,p.pos.z),0);const gb=bldAt(p.pos.x,p.pos.z,0);if(gb)g=Math.max(g,gb.top);
-  if(p.pos.y<g+2.5){explode(p.pos,12);damage(p,p.maxHp*.4,null);if(p.alive){p.pos.y=g+90;const yaw=Math.atan2(fwd.x,fwd.z);p.q.setFromAxisAngle(UP,yaw);G.camPitch=.1;banner('지면 충돌','기체 손상 40%',1.6);}}
+  if(p.pos.y<g+2.5){explode(p.pos,12);const cr=DIFF.crash||.4;damage(p,p.maxHp*cr,null);if(p.alive){p.pos.y=g+90;const yaw=Math.atan2(fwd.x,fwd.z);p.q.setFromAxisAngle(UP,yaw);G.camPitch=.1;banner('지면 충돌',`기체 손상 ${Math.round(cr*100)}%`,1.6);}}
+  if(DIFF.lowAlt){const g2=Math.max(height(p.pos.x+p.vel.x*1.5,p.pos.z+p.vel.z*1.5),g);if(p.pos.y<g2+45&&p.vel.y<0){const pull=clamp((g2+45-p.pos.y)/45,0,1)*1.6*dt;_q2.setFromAxisAngle(_c.set(1,0,0),-pull);p.q.multiply(_q2).normalize();}}
   p.model.position.copy(p.pos);p.model.quaternion.copy(p.q);
   p.parts.glow.scale.set(1,1,.4+p.throttle*.8+(boost?.9:0)+Math.random()*.15);
   if(boost&&Math.random()<dt*30)fx(true,_e.copy(p.pos).addScaledVector(fwd,-9),null,2.5,1,.15,0xffa860,1);
