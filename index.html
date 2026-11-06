@@ -36,6 +36,7 @@ h1{font-family:var(--fd);font-weight:400;font-size:clamp(44px,7vw,84px);line-hei
 h2{font-family:var(--fb);font-weight:500;font-size:12px;letter-spacing:.14em;color:var(--dim);margin:2px 0 0;display:flex;gap:10px;align-items:center}
 h2::after{content:"";flex:1;height:1px;background:var(--line)}
 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.card:last-child:nth-child(odd){grid-column:1/-1}
 .card{appearance:none;background:var(--panel2);border:1px solid var(--line);padding:10px 10px 12px;text-align:left;cursor:pointer;display:grid;gap:4px;min-width:0}
 .card svg{width:100%;height:40px;fill:currentColor;color:var(--dim)}
 .card b{font-family:var(--fd);font-weight:400;font-size:21px;line-height:1.1}
@@ -222,6 +223,7 @@ details.keys b{color:var(--hud);font-weight:500}
           <summary>조작법</summary>
           <p><b>전차 · 함선</b> W/S 전진·후진 (함선은 속도 단계 조절), A/D 선회, 마우스로 조준, 좌클릭 발사, 우클릭 확대</p>
           <p><b>전투기</b> W/S 추력, 마우스를 움직인 방향으로 기체가 따라감, A/D 롤</p>
+          <p><b>보병</b> WASD로 보는 방향 기준 이동, Shift 달리기, 우클릭 조준(저격수는 조준경). 분대원이 따라오며 가까운 적을 쏩니다. 소총탄은 장갑 차량에 거의 안 들어가니 대전차 로켓이나 대물 저격총을 쓰세요.</p>
           <p><b>공통</b> 1~4 또는 휠로 무기 선택, Q/E/R 스킬 바로 사용, Tab 스킬 선택, 스페이스 선택된 스킬 사용, C 시점 거리, Esc 일시정지. 미사일은 목표를 조준선 가까이 두면 잠금됩니다. 미사일·폭탄을 다 쓰면 재장전합니다. 설정에서 자동 또는 수동을 고를 수 있고, F키(터치는 선택된 무기 칸을 한 번 더)로 언제든 직접 재장전할 수 있어요.</p>
           <p><b>터치</b> 왼쪽 화면 드래그로 이동, 오른쪽 드래그로 조준, 발사 버튼을 누르고 있기</p>
         </details>
@@ -264,6 +266,14 @@ const WEAPONS={
   cannon:{name:'기관포',sub:'기관포 · 기수 고정',kind:'bullet',speed:1150,dmg:10,cd:.035,spread:.007,nose:true,range:1300,ammo:Infinity},
   aam:{name:'공대공 미사일',sub:'미사일 · 공중 잠금',kind:'missile',target:'air',speed:560,dmg:290,blast:12,cd:1,ammo:6,turn:3.8,lock:2800},
   agm:{name:'공대지 미사일',sub:'미사일 · 지상/수상 잠금',kind:'missile',target:'surface',speed:400,dmg:460,blast:16,cd:1.6,ammo:4,turn:2.6,lock:2800},
+  rifle:{name:'돌격소총',sub:'소총 · 30발 탄창',kind:'bullet',speed:900,dmg:14,cd:.1,spread:.006,range:900,ammo:30,soft:true},
+  smg:{name:'기관단총',sub:'근접 자동화기',kind:'bullet',speed:750,dmg:10,cd:.07,spread:.012,range:500,ammo:35,soft:true},
+  lmg:{name:'경기관총',sub:'분대 지원화기 · 100발',kind:'bullet',speed:900,dmg:12,cd:.075,spread:.012,range:1000,ammo:100,soft:true},
+  sniper:{name:'저격소총',sub:'저격 · 우클릭 조준경',kind:'bullet',speed:1600,dmg:150,cd:1.4,spread:.0008,range:2200,ammo:5,soft:true},
+  amr:{name:'대물 저격총',sub:'저격 · 장갑 관통',kind:'bullet',speed:1400,dmg:220,cd:2.2,spread:.001,range:2000,ammo:5},
+  grenade:{name:'수류탄',sub:'투척 · 범위 피해',kind:'shell',speed:30,dmg:170,blast:9,cd:1,grav:14,ammo:4},
+  rpg:{name:'대전차 로켓',sub:'로켓 · 장갑 차량',kind:'shell',rocket:true,speed:170,dmg:420,blast:7,cd:1.5,grav:3,ammo:3},
+  manpads:{name:'휴대용 대공미사일',sub:'미사일 · 공중 잠금',kind:'missile',target:'air',speed:400,dmg:240,blast:10,cd:2,ammo:2,turn:4.5,lock:2400},
   bomb:{name:'유도 폭탄',sub:'폭탄 · 투하',kind:'bomb',target:'surface',dmg:720,blast:30,cd:1.2,ammo:4,lock:2200},
 };
 const SKILLS={
@@ -278,6 +288,7 @@ const SKILLS={
   flare:{name:'플레어',cd:9,dur:3,desc:'3초간 추적 미사일 교란'},
   afterburner:{name:'애프터버너',cd:14,dur:5,desc:'5초간 속도와 선회력 증가'},
   cruise_salvo:{name:'순항미사일',cd:28,desc:'지상·수상 목표 2곳에 순항미사일'},
+  medic:{name:'의무병 호출',cd:30,dur:5,desc:'5초간 체력 35% 회복, 쓰러진 분대원 1명 복귀'},
 };
 const CLASSES={
   ship:{name:'전투함',desc:'함포와 미사일로 바다를 장악. 순항미사일로 해안 너머까지 타격.',domain:'sea',
@@ -305,6 +316,14 @@ const CLASSES={
       {id:'mbt',name:'주력전차',spec:'55t · 70km/h · 120mm 활강포',hp:820,speed:19,turn:1,gunDmg:1,gunCd:1,scale:1,bars:[3,4,4]},
       {id:'heavy',name:'중전차',spec:'70t · 45km/h · 130mm 활강포',hp:1300,speed:13,turn:.7,gunDmg:1.6,gunCd:1.4,scale:1.2,bars:[5,2,5]},
       {id:'spaag',name:'자주대공포',spec:'45t · 65km/h · 35mm 쌍열 기관포',hp:600,speed:21,turn:1.1,gunDmg:1,gunCd:1,scale:1,weapons:['autocannon','mg','sam_t'],bars:[2,4,3]},
+    ]},
+  infantry:{name:'보병',desc:'분대를 이끌고 걸어서 싸우는 보병. 엄폐와 분대원 화력, 대전차 무기가 핵심입니다.',domain:'land',
+    weapons:['rifle','grenade','rpg','manpads'],skills:['medic','smoke','artillery'],
+    svg:'<circle cx="30" cy="10" r="4"/><path d="M25 15h10l2 10h-3l-1 12h-3l-1-8-1 8h-3l-1-12h-2z"/><circle cx="60" cy="7" r="5"/><path d="M54 13h12l3 12h-4l-1 13h-4l-1-9-1 9h-4l-1-13h-3z"/><path d="M63 16h40v3H63z"/><circle cx="90" cy="10" r="4"/><path d="M85 15h10l2 10h-3l-1 12h-3l-1-8-1 8h-3l-1-12h-2z"/>',
+    types:[
+      {id:'rifle',name:'소총 여단',spec:'분대원 5명 · 돌격소총 · 대전차 로켓',hp:220,speed:5.2,turn:1,scale:.35,squad:5,bars:[3,4,3]},
+      {id:'sniper',name:'저격수 부대',spec:'관측수 2명 · 저격소총 · 대물 저격총',hp:150,speed:5,turn:1,scale:.35,squad:2,scope:true,weapons:['sniper','amr','smg','grenade'],bars:[2,4,5]},
+      {id:'lmg',name:'기관총 분대',spec:'분대원 3명 · 경기관총 · 수류탄',hp:280,speed:4.4,turn:1,scale:.35,squad:3,weapons:['lmg','rifle','grenade','rpg'],bars:[4,2,4]},
     ]},
   jet:{name:'전투기',desc:'하늘을 가르며 공대공, 공대지 미사일과 폭탄을 퍼붓는 고속 기체.',domain:'air',
     weapons:['cannon','aam','agm','bomb'],skills:['flare','afterburner','cruise_salvo'],
@@ -347,8 +366,10 @@ const EK={
   battery:{name:'적 해안포',domain:'land',hp:320,speed:0,score:110},
   aa:{name:'적 대공진지',domain:'land',hp:280,speed:0,score:110},
 };
+EK.inf={name:'적 보병',domain:'land',hp:45,speed:6.5,score:40,soldier:true};
+for(const k of ['tank','heavytank','boat','bigship','ecarrier','battery','aa'])EK[k].armored=true;
 const RELOADS={auto:{name:'자동 재장전'},manual:{name:'수동 (F키)'}};
-const DEFCOL={tank:0x5f6b45,ship:0x7f8b93,carrier:0x7a868e,jet:0x8c98a2};
+const DEFCOL={infantry:0x5b6346,tank:0x5f6b45,ship:0x7f8b93,carrier:0x7a868e,jet:0x8c98a2};
 const PAINTS={
   std:{name:'기본 도색',col:null,m:{}},
   camo:{name:'위장 녹색',col:0x4d6638,m:{acc:1.12,speed:.95}},
@@ -472,6 +493,49 @@ function makeTank(c,kind,s){
     const mz=obj(0,0,L);pit.add(mz);muzzles.push(mz);
   }
   return {g,turrets:[{tur,pit,muzzles}],launcher:obj(1.6*s,.6*s,0)};
+}
+function makeSoldier(c,kind){
+  const g=new THREE.Group(),skin=0xc99f80,dk=0x26271f,vest=new THREE.Color(c).multiplyScalar(.72).getHex();
+  g.rotation.order='YXZ';
+  const hips=new THREE.Group();hips.position.y=.92;g.add(hips);
+  hips.add(at(box(.5,.2,.28,c),0,-.02,0));
+  const mkLeg=x=>{const th=new THREE.Group();th.position.set(x,-.02,0);hips.add(th);th.add(at(box(.22,.46,.26,c),0,-.22,0));
+    const kn=new THREE.Group();kn.position.y=-.44;th.add(kn);kn.add(at(box(.19,.44,.21,c),0,-.21,-.01));kn.add(at(box(.23,.13,.34,dk),0,-.41,.05));return {th,kn};};
+  const LL=mkLeg(-.14),LR=mkLeg(.14);
+  const torso=new THREE.Group();hips.add(torso);
+  torso.add(at(box(.54,.62,.3,c),0,.31,0));torso.add(at(box(.58,.4,.36,vest),0,.36,.01));torso.add(at(box(.38,.42,.2,vest),0,.34,-.26));
+  torso.add(at(box(.24,.26,.24,skin),0,.78,0));torso.add(at(box(.32,.15,.34,vest),0,.95,0));
+  const tur=new THREE.Group();tur.position.set(0,.5,0);torso.add(tur);
+  const pit=new THREE.Group();pit.position.set(.1,0,.05);tur.add(pit);
+  pit.add(at(box(.13,.13,.46,c),.16,-.06,.2));pit.add(at(box(.13,.13,.42,c),-.16,-.06,.28));
+  const L=kind==='sniper'?1.45:kind==='lmg'?1.15:kind==='rpg'?1.1:.95;
+  pit.add(at(box(.08,.13,L,dk),.04,0,.2+L/2-.25));
+  if(kind==='sniper')pit.add(at(box(.07,.07,.36,dk),.04,.11,.3));
+  if(kind==='lmg')pit.add(at(box(.14,.16,.18,dk),.04,-.12,.35));
+  if(kind==='rpg')pit.add(at(box(.16,.16,.3,0x4d5a3a),.04,0,.2+L-.3));
+  const mz=obj(.04,0,.2+L-.25);pit.add(mz);
+  return {g,hips,torso,thL:LL.th,thR:LR.th,knL:LL.kn,knR:LR.kn,turrets:[{tur,pit,muzzles:[mz]}],recoil:0};
+}
+// 보행 애니메이션: 허벅지·무릎 2관절, 걷기/달리기 구분, 옆·뒤로 걷기, 상체 기울임·들썩임, 반동
+function animSoldier(P,speed,dt,rel){
+  speed=Math.min(speed||0,11);let ly=angDiff(0,rel||0),back=false;
+  if(Math.abs(ly)>Math.PI/2){back=true;ly=angDiff(0,ly+Math.PI);}
+  const mv=clamp(speed/3,0,1),run=speed>6.2;
+  if(mv>.05)P.ph=(P.ph||0)+dt*TAU*(run?1.5:clamp(.55+speed*.22,.7,1.3))*(back?-1:1);
+  else P.ph=lerp(P.ph||0,Math.round((P.ph||0)/Math.PI)*Math.PI,Math.min(1,dt*6));
+  const s=Math.sin(P.ph),c=Math.cos(P.ph)*(back?-1:1),sw=(run?.8:.5)*mv,kb=(run?1.35:.75)*mv;
+  P.thL.rotation.x=s*sw;P.thR.rotation.x=-s*sw;
+  P.knL.rotation.x=.06+Math.max(0,-c)*kb;P.knR.rotation.x=.06+Math.max(0,c)*kb;
+  P.ly=lerp(P.ly||0,mv>.05?clamp(ly,-1.1,1.1)*.85:0,Math.min(1,dt*8));
+  P.hips.rotation.y=P.ly;P.torso.rotation.y=-P.ly-s*.1*mv;
+  P.t=(P.t||0)+dt;
+  const drop=.89*(1-Math.cos(sw*Math.abs(s)))+(run?.07:.02)*mv;
+  P.hips.position.y=.92-drop+(mv<.05?Math.sin(P.t*2.2)*.006:0);
+  P.hips.position.x=s*.025*mv;
+  P.recoil=Math.max(0,(P.recoil||0)-dt*7);
+  P.torso.rotation.x=lerp(P.torso.rotation.x,(run?.24:.05*mv)-P.recoil*.06,Math.min(1,dt*10));
+  P.torso.rotation.z=-s*.035*mv;
+  P.turrets[0].tur.position.z=-.06*P.recoil;
 }
 function hullShape(len,w){
   const sh=new THREE.Shape();
@@ -737,6 +801,7 @@ function computeBox(u){
   u.model.updateMatrixWorld(true);
   const b=new THREE.Box3().setFromObject(u.model);
   u.hc=b.getCenter(new V3());u.half=b.getSize(new V3()).multiplyScalar(.5);u.r=u.half.length();
+  if(u.soldier&&!u.isPlayer){u.half.multiplyScalar(1.6);u.r=u.half.length();}
   u.inv=new THREE.Matrix4();u.c=new V3();u.vel=new V3();u.prev=new V3();
 }
 function syncUnit(u){u.model.updateMatrixWorld();u.inv.copy(u.model.matrixWorld).invert();u.c.copy(u.hc).applyMatrix4(u.model.matrixWorld);}
@@ -752,6 +817,7 @@ function placeGround(u,len,wid){
 
 function buildPlayerModel(cls,T,col){
   const c=col==null?DEFCOL[cls]:col;
+  if(cls==='infantry')return makeSoldier(c,T.id);
   if(cls==='tank')return makeTank(c,T.id,T.scale);
   if(cls==='ship')return makeShip(T.len,T.tur,c,{barrels:T.barrels});
   if(cls==='carrier')return makeCarrier(T.len,c);
@@ -783,7 +849,7 @@ function updatePreview(dt,t){
   if(!preview)return;const p=preview,T=p.T,dom=CLASSES[p.cls].domain;
   let r,hgt,tgt=new V3();
   if(dom==='air'){p.pos.set(Math.sin(t*.15)*160,320+Math.sin(t*.3)*10,Math.cos(t*.15)*160);const d=new V3(Math.cos(t*.15),0,-Math.sin(t*.15));p.model.position.copy(p.pos);p.model.lookAt(_a.copy(p.pos).add(d));p.model.rotateZ(.5);r=34;hgt=8;tgt.copy(p.pos);if(p.parts.glow)p.parts.glow.scale.set(1,1,.7+Math.random()*.3);}
-  else if(dom==='land'){p.yaw+=dt*.0;placeGround(p,3.5,1.8);r=20*(T.scale||1);hgt=6;tgt.copy(p.pos);tgt.y+=2;p.parts.turrets[0].tur.rotation.y=Math.sin(t*.4)*.6;}
+  else if(dom==='land'){p.yaw+=dt*.0;placeGround(p,3.5,1.8);r=20*(T.scale||1);hgt=6*Math.min(1,(T.scale||1)*1.4);tgt.copy(p.pos);tgt.y+=2*(T.scale||1);p.parts.turrets[0].tur.rotation.y=Math.sin(t*.4)*.6;if(p.parts.hips)animSoldier(p.parts,0,dt);}
   else{p.pos.y=Math.sin(t*.8)*.3;p.model.position.copy(p.pos);p.model.rotation.set(0,p.yaw,Math.sin(t*.6)*.015,'YXZ');r=T.len*1.25+20;hgt=T.len*.35;tgt.copy(p.pos);tgt.y+=T.len*.08;}
   const ang=t*.12;
   camera.position.set(tgt.x+Math.sin(ang)*r,tgt.y+hgt,tgt.z+Math.cos(ang)*r);
@@ -806,7 +872,8 @@ function createPlayer(){
   if(p.domain==='land'){p.camDist=20*(T.scale||1);p.eye=3.6*(T.scale||1);p.yaw=Math.atan2(-p.pos.x,-p.pos.z);}
   else if(p.domain==='sea'){p.camDist=T.len*1.05+22;p.eye=T.len*.17;p.yaw=bestYawAt(p.pos,'sea',400);}
   else{p.camDist=32;p.eye=2.5;p.pos.set(0,380,0);p.yaw=0;p.q=new Q4().setFromAxisAngle(UP,p.yaw);p.speed=lerp(T.min,T.max,.55);p.throttle=.55;}
-  p.w=(T.weapons||C.weapons).map(id=>{const d=WEAPONS[id];let ammo=d.ammo;if(isFinite(ammo)){if(T.ammo&&typeof T.ammo==='object')ammo=T.ammo[id]!=null?T.ammo[id]:ammo;else ammo=Math.max(1,Math.round(ammo*(T.ammo||1)));}const RT={asm:9,sam:7,cruise:12,atgm:8,sam_t:7,aam:7,agm:9,bomb:10};return {id,def:d,ammo,max:ammo,cd:0,reload:0,rt:RT[id]||8};});
+  if(p.cls==='infantry'){p.camDist=5.5;p.eye=1.75;p.soldier=true;}
+  p.w=(T.weapons||C.weapons).map(id=>{const d=WEAPONS[id];let ammo=d.ammo;if(isFinite(ammo)){if(T.ammo&&typeof T.ammo==='object')ammo=T.ammo[id]!=null?T.ammo[id]:ammo;else ammo=Math.max(1,Math.round(ammo*(T.ammo||1)));}const RT={asm:9,sam:7,cruise:12,atgm:8,sam_t:7,aam:7,agm:9,bomb:10,rifle:2.2,smg:1.8,lmg:5,sniper:3,amr:4,grenade:8,rpg:7,manpads:9};return {id,def:d,ammo,max:ammo,cd:0,reload:0,rt:RT[id]||8};});
   p.wi=0;
   p.sk=C.skills.map(id=>({id,def:SKILLS[id],cd:0}));
   p.cd2={ciws:0,salvo:0};
@@ -818,11 +885,12 @@ function createPlayer(){
 // ================= START / FLOW =================
 function startGame(){
   saveSettings();
-  if(S.cls==='tank'&&TERRAINS[S.terrain].noLand){S.terrain='coast';buildWorld();}
+  if(CLASSES[S.cls].domain==='land'&&TERRAINS[S.terrain].noLand){S.terrain='coast';buildWorld();}
   DIFF=DIFFS[S.diff];
   if(preview){disposeModel(preview.model);preview=null;}
   clearBattle();
   G.player=createPlayer();
+  refillSquad();
   G.state='play';G.paused=false;G.score=0;G.kills=0;G.wave=0;G.time=0;G.vig=0;G.ghost=1;G.feed=[];G.hits=[];
   G.camYaw=G.player.yaw;G.camPitch=G.player.domain==='air'?0:-.08;G.camOff.set(0,0,0);G.camScale=1;G.zoom=false;
   G.inter=4;G.waveActive=false;
@@ -847,12 +915,12 @@ function toMenu(){
 }
 function waveComposition(n){
   const cls=G.player.cls;let total=Math.min(30,Math.round((3+n*1.7)*DIFF.count));
-  const MAIN={ship:{boat:1},carrier:{ecarrier:.3,boat:.7},tank:{tank:1},jet:{jet:1}}[cls];
-  const OTHER={ship:{jet:.35,heli:.3,battery:.35},carrier:{jet:.4,heli:.3,battery:.3},tank:{heli:.4,jet:.3,battery:.3},jet:{tank:.3,boat:.3,aa:.25,heli:.15}}[cls];
+  const MAIN={ship:{boat:1},carrier:{ecarrier:.3,boat:.7},tank:{tank:1},jet:{jet:1},infantry:{inf:1}}[cls];
+  const OTHER={ship:{jet:.35,heli:.3,battery:.35},carrier:{jet:.4,heli:.3,battery:.3},tank:{heli:.4,jet:.3,battery:.3},jet:{tank:.3,boat:.3,aa:.25,heli:.15},infantry:{tank:.4,heli:.35,jet:.25}}[cls];
   const share=rand(.8,1);
   const wpick=W=>{const ks=Object.keys(W);let r=Math.random(),acc=0;for(const k of ks){acc+=W[k];if(r<=acc)return k;}return ks[0];};
   const list=[];
-  if(n%5===0){const boss=cls==='tank'?'heavytank':cls==='jet'?'bomber':'bigship';const nb=Math.min(4,1+Math.floor(n/10));for(let i=0;i<nb;i++)list.push(boss);total=Math.max(2,total-4*nb);}
+  if(n%5===0){const boss=cls==='tank'||cls==='infantry'?'heavytank':cls==='jet'?'bomber':'bigship';const nb=Math.min(4,1+Math.floor(n/10));for(let i=0;i<nb;i++)list.push(boss);total=Math.max(2,total-4*nb);}
   const nMain=Math.round(total*share);let carriers=0;const maxCv=Math.min(3,1+Math.floor(n/4));
   for(let i=0;i<total;i++){let k=i<nMain?wpick(MAIN):wpick(OTHER);if(k==='ecarrier'){if(carriers>=maxCv)k='boat';else carriers++;}list.push(k);}
   for(let i=list.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=list[i];list[i]=list[j];list[j]=t;}
@@ -866,7 +934,7 @@ function startWave(n){
   const list=waveComposition(n);
   list.forEach((k,i)=>G.sched.push({t:i*.35,fn:()=>spawnEnemy(k,n)}));
   const boss=list.some(k=>EK[k].boss);
-  const mainName={ship:'적 함선',carrier:'적 항모 함대',tank:'적 전차',jet:'적 전투기'}[G.player.cls];
+  const mainName={ship:'적 함선',carrier:'적 항모 함대',tank:'적 전차',jet:'적 전투기',infantry:'적 보병'}[G.player.cls];
   banner(`웨이브 ${n}`,(boss?'대형 표적 접근 · ':'')+`적 ${list.length}기 접근 · ${mainName} ${list.mainPct}%`,2.6);
 }
 
@@ -881,12 +949,13 @@ function spawnEnemy(kind,n,at){
     pos.y=Math.max(height(pos.x,pos.z),0)+(kind==='heli'?70:rand(250,520));
   }else{
     const clr=dom==='sea'?(kind==='bigship'||kind==='ecarrier'?55:22):0;
-    pos=findSpot(dom,pp.x,pp.z,TP.town&&dom==='land'?260:650,TP.town&&dom==='land'?900:1300,160,clr)||findSpot(dom,pp.x,pp.z,250,HALF*2,400,clr);
+    pos=findSpot(dom,pp.x,pp.z,kind==='inf'?220:TP.town&&dom==='land'?260:650,kind==='inf'?480:TP.town&&dom==='land'?900:1300,160,clr)||findSpot(dom,pp.x,pp.z,250,HALF*2,400,clr);
     if(!pos){return spawnEnemy(kind==='bigship'||kind==='heavytank'?'bomber':Math.random()<.6?'jet':'heli',n);}
   }
   let b;
   switch(kind){
     case 'tank':b=makeTank(0x6e4b3b,'mbt',1);break;
+    case 'inf':{const r=Math.random()<.3;b=makeSoldier(0x6b5a43,r?'rpg':'rifle');b.rpg=r;break;}
     case 'heavytank':b=makeTank(0x553429,'heavy',1.6);break;
     case 'boat':b=makeShip(34,1,0x5e5856,{barrels:1});break;
     case 'bigship':b=makeShip(82,3,0x4c4848,{barrels:2});break;
@@ -898,7 +967,7 @@ function spawnEnemy(kind,n,at){
     case 'aa':b=makeSite(0x5d5a48,'aa');break;
   }
   const hpm=DIFF.hp*(1+(n-1)*.07);
-  const e={kind,K,team:'enemy',domain:dom,alive:true,hp:K.hp*hpm,maxHp:K.hp*hpm,pos,yaw:Math.atan2(pp.x-pos.x,pp.z-pos.z),speed:K.speed,
+  const e={kind,K,soldier:!!K.soldier,rpg:!!b.rpg,team:'enemy',domain:dom,alive:true,hp:K.hp*hpm,maxHp:K.hp*hpm,pos,yaw:Math.atan2(pp.x-pos.x,pp.z-pos.z),speed:K.speed,
     model:b.g,parts:b,cd:{gun:rand(1.5,3.5),msl:rand(5,10),mg:0},burst:0,side:Math.random()<.5?1:-1,state:'attack',st:0,tgt:null,retgt:0,name:K.name,boss:!!K.boss};
   scene.add(e.model);computeBox(e);
   if(dom==='air'){e.dir=new V3(pp.x-pos.x,0,pp.z-pos.z).normalize();e.bank=0;e.turn=kind==='jet'?.95:kind==='bomber'?.35:1.2;e.role=kind==='bomber'?'bomber':kind==='heli'?'heli':'striker';e.bombs=6;}
@@ -958,7 +1027,8 @@ function updateEnemy(e,dt){
   if(e.domain==='air'){airAI(e,dt);}
   else if(t){
     const k=e.kind;const dist=Math.hypot(t.pos.x-e.pos.x,t.pos.z-e.pos.z);
-    if(k==='tank'||k==='heavytank'){
+    if(k==='inf'){moveSurface(e,dt,t.pos,e.rpg?150:100);e.pos.y=height(e.pos.x,e.pos.z);e.model.position.copy(e.pos);e.model.rotation.set(0,e.yaw,0);{const vx=(e.pos.x-e.prev.x)/Math.max(dt,1e-4),vz=(e.pos.z-e.prev.z)/Math.max(dt,1e-4);animSoldier(e.parts,Math.hypot(vx,vz),dt,Math.atan2(vx,vz)-e.yaw);}}
+    else if(k==='tank'||k==='heavytank'){
       moveSurface(e,dt,t.pos,k==='heavytank'?500:330);placeGround(e,3.5*(k==='heavytank'?1.6:1),1.8);
     }else if(k==='boat'||k==='bigship'||k==='ecarrier'){
       if(k==='ecarrier'){e.launchT=(e.launchT==null?rand(4,7):e.launchT)-dt;if(e.launchT<=0&&(e.launched||0)<4){e.launched=(e.launched||0)+1;e.launchT=rand(10,14);e.parts.launch.getWorldPosition(_a);_a.y+=6;spawnEnemy('jet',G.wave,_a);pushFeed('적 항공모함에서 전투기 발진');}}
@@ -973,8 +1043,13 @@ function updateEnemy(e,dt){
     const air=t.domain==='air';
     if(!air||k==='aa'){for(const tt of tur)aimTurret(tt,e.yaw,lp,1.2,dt);}
     e.cd.gun-=dt;e.cd.msl-=dt;e.cd.mg-=dt;
+    if(k==='inf'&&dist<500&&e.cd.gun<=0&&(t.domain!=='air'||t.pos.y-height(t.pos.x,t.pos.z)<150)){
+      tur[0].muzzles[0].getWorldPosition(_a);
+      if(e.rpg&&((t.K&&t.K.armored)||(t.cls&&t.cls!=='infantry'))&&Math.random()<.5){const v=_b.copy(t.c).sub(_a).normalize();v.x+=rand(-.02,.02)*eSpread();v.y+=rand(-.01,.02);v.z+=rand(-.02,.02)*eSpread();v.normalize().multiplyScalar(170);spawnShell('enemy',_a,v,90*DIFF.dmg,6,3,.6,true);e.cd.gun=rand(5,8);}
+      else{const dir=_b.copy(t.c).sub(_a).normalize();spawnBullet('enemy',_a,dir,850,3.5*DIFF.dmg,.022*eSpread(),false,null,600);e.parts.recoil=1;e.burst++;e.cd.gun=e.burst%3===0?rand(1.2,2.2):.14;}
+    }
     const gunSpd=k==='tank'||k==='heavytank'?520:430, grav=k==='tank'||k==='heavytank'?12:22;
-    if(!air&&k!=='aa'&&dist<(k==='battery'||k==='bigship'?1900:1200)&&e.cd.gun<=0){
+    if(!air&&k!=='aa'&&k!=='inf'&&dist<(k==='battery'||k==='bigship'?1900:1200)&&e.cd.gun<=0){
       for(const tt of tur){
         if(aimTurret(tt,e.yaw,lp,0,0)>.35)continue;
         for(const mz of tt.muzzles){mz.getWorldPosition(_a);const lp2=leadPt(_a,t,gunSpd,_d);
@@ -1079,6 +1154,56 @@ function rotateToward(v,target,maxA){
   v.applyAxisAngle(_ax,maxA);return v.normalize();
 }
 
+// ---------- infantry ----------
+const SLOTS=[[-2.6,-2.8],[2.6,-2.8],[-5,-5.5],[5,-5.5],[0,-7],[-7,-1.5],[7,-1.5]];
+function okInf(x,z){return Math.abs(x)<HALF*.9&&Math.abs(z)<HALF*.9&&height(x,z)>.3&&!bldAt(x,z,.6);}
+function slotPos(i,out){const p=G.player,s=SLOTS[i%SLOTS.length],fy=p.yaw;return out.set(p.pos.x-Math.cos(fy)*s[0]+Math.sin(fy)*s[1],0,p.pos.z+Math.sin(fy)*s[0]+Math.cos(fy)*s[1]);}
+function infantryMove(p,dt,ax){
+  const T=p.T,run=(keys.ShiftLeft||keys.ShiftRight)&&ax.y>0;
+  const sp=T.speed*(run?1.7:1)*(G.zoom?.5:1);
+  const fy=G.camYaw,fx_=Math.sin(fy),fz=Math.cos(fy),rx=-Math.cos(fy),rz=Math.sin(fy);
+  let mx=fx_*ax.y+rx*ax.x,mz=fz*ax.y+rz*ax.x;const ml=Math.hypot(mx,mz);if(ml>1){mx/=ml;mz/=ml;}
+  const k=Math.min(1,dt*10);p.mvx=lerp(p.mvx||0,mx*sp,k);p.mvz=lerp(p.mvz||0,mz*sp,k);
+  const nx=p.pos.x+p.mvx*dt,nz=p.pos.z+p.mvz*dt,step=Math.hypot(p.mvx,p.mvz)*dt;
+  const st=step>1e-4?Math.abs(height(nx,nz)-height(p.pos.x,p.pos.z))/step:0;
+  if(okInf(nx,nz)&&st<1.6){p.pos.x=nx;p.pos.z=nz;}else if(okInf(nx,p.pos.z)){p.pos.x=nx;}else if(okInf(p.pos.x,nz)){p.pos.z=nz;}
+  p.speed=Math.hypot(p.mvx,p.mvz);p.yaw=fy;p.pos.y=height(p.pos.x,p.pos.z);
+  p.model.position.copy(p.pos);p.model.rotation.set(0,p.yaw,0);
+  animSoldier(p.parts,p.speed,dt,Math.atan2(p.mvx,p.mvz)-p.yaw);
+}
+function spawnSquad(i){
+  const p=G.player;if(!p)return;const sn=p.T.id==='sniper';
+  const col=(PAINTS[S.paint]||PAINTS.std).col;
+  const b=makeSoldier(col==null?DEFCOL.infantry:col,sn?'sniper':(p.T.id==='lmg'&&i===0?'lmg':'rifle'));
+  const sp=slotPos(i,new V3());if(!okInf(sp.x,sp.z))sp.copy(p.pos);sp.y=height(sp.x,sp.z);
+  const u={team:'ally',domain:'land',soldier:true,sniper:sn,alive:true,hp:80,maxHp:80,pos:sp,yaw:p.yaw,model:b.g,parts:b,cd:{gun:rand(.3,1.2)},burst:0,slot:i,tgt:null,retgt:0,name:'아군 분대원'};
+  u.model.position.copy(sp);scene.add(u.model);computeBox(u);G.allies.push(u);
+}
+function refillSquad(max){
+  const p=G.player;if(!p||p.cls!=='infantry')return 0;
+  const used=new Set(G.allies.filter(a=>a.soldier&&a.alive).map(a=>a.slot));let n=0;
+  for(let i=0;i<p.T.squad&&n<(max||99);i++)if(!used.has(i)){spawnSquad(i);n++;}
+  return n;
+}
+function squadAI(u,dt){
+  const p=G.player;u.prev.copy(u.pos);let sp=0;
+  if(p&&p.alive){const tg=slotPos(u.slot,_d);const dx=tg.x-u.pos.x,dz=tg.z-u.pos.z,d=Math.hypot(dx,dz);
+    if(d>70&&okInf(tg.x,tg.z)){u.pos.x=tg.x;u.pos.z=tg.z;}
+    else if(d>.7){sp=Math.min(d*1.6,p.T.speed*1.8);const nx=u.pos.x+dx/d*sp*dt,nz=u.pos.z+dz/d*sp*dt;if(okInf(nx,nz)){u.pos.x=nx;u.pos.z=nz;}else if(okInf(nx,u.pos.z))u.pos.x=nx;else if(okInf(u.pos.x,nz))u.pos.z=nz;}}
+  u.pos.y=height(u.pos.x,u.pos.z);
+  u.retgt-=dt;if(u.retgt<=0||!u.tgt||!u.tgt.alive){u.retgt=1.2;u.tgt=null;let bd=u.sniper?1700:850;for(const e of G.enemies){if(!e.alive||e.kind==='jet'||e.kind==='bomber')continue;const d=e.pos.distanceTo(u.pos);if(d<bd){bd=d;u.tgt=e;}}}
+  let face=p?p.yaw:u.yaw;const t=u.tgt;const tp=u.parts.turrets[0];
+  if(t){face=Math.atan2(t.c.x-u.pos.x,t.c.z-u.pos.z);u.cd.gun-=dt;
+    if(u.cd.gun<=0&&Math.abs(angDiff(u.yaw,face))<.3){tp.muzzles[0].getWorldPosition(_a);const dir=_b.copy(t.c).sub(_a).normalize();
+      const pr=spawnBullet('ally',_a,dir,u.sniper?1500:900,u.sniper?110:9,u.sniper?.0015:.007,false,null,u.sniper?1800:900);if(pr)pr.soft=true;
+      fx(true,_e.copy(_a).addScaledVector(dir,.5),null,.8,0,.05,0xffe0a0,1);
+      u.parts.recoil=u.sniper?2.5:1;u.burst++;u.cd.gun=u.sniper?rand(2.4,3.4):(u.burst%4===0?rand(.9,1.6):.13);}
+    const hd=Math.hypot(t.c.x-u.pos.x,t.c.z-u.pos.z);tp.pit.rotation.x=-clamp(Math.atan2(t.c.y-u.pos.y-1.4,hd),-.6,1.2);}
+  else tp.pit.rotation.x*=.9;
+  u.yaw+=angDiff(u.yaw,face)*Math.min(1,dt*7);
+  u.model.position.copy(u.pos);u.model.rotation.set(0,u.yaw,0);{const vx=(u.pos.x-u.prev.x)/Math.max(dt,1e-4),vz=(u.pos.z-u.prev.z)/Math.max(dt,1e-4);animSoldier(u.parts,Math.hypot(vx,vz),dt,Math.atan2(vx,vz)-u.yaw);}
+  u.vel.copy(u.pos).sub(u.prev).divideScalar(Math.max(dt,1e-4));syncUnit(u);
+}
 // ---------- allies ----------
 function spawnAlly(role,from){
   const b=makeJet(role==='bomber'?0x6f7d8a:0x9aa6b0,role==='bomber'?'a10':'f15',role==='bomber'?1.2:.9);
@@ -1095,7 +1220,7 @@ function addProj(o){o.mesh=new THREE.Mesh(PG[o.geo],o.mat);o.mesh.position.copy(
 function spawnBullet(team,from,dir,spd,dmg,spread,flak,owner,range){
   const d=_f.copy(dir);d.x+=rand(-1,1)*spread;d.y+=rand(-1,1)*spread;d.z+=rand(-1,1)*spread;d.normalize();
   const v=d.multiplyScalar(spd);if(owner&&owner.vel)v.add(owner.vel);
-  addProj({kind:'bullet',geo:'tracer',mat:team==='enemy'?PM.etr:team==='ally'?PM.atr:PM.ptr,pos:from.clone(),vel:v.clone(),dmg,blast:flak?6:0,flak,life:(range||1300)/spd,team,fromPlayer:team==='player'});
+  return addProj({kind:'bullet',geo:'tracer',mat:team==='enemy'?PM.etr:team==='ally'?PM.atr:PM.ptr,pos:from.clone(),vel:v.clone(),dmg,blast:flak?6:0,flak,life:(range||1300)/spd,team,fromPlayer:team==='player'});
 }
 function spawnShell(team,from,vel,dmg,blast,grav,scale,rocket){
   addProj({kind:'shell',geo:rocket?'missile':'shell',mat:rocket?(team==='enemy'?PM.emissile:PM.missile):(team==='enemy'?PM.eshell:PM.pshell),pos:from.clone(),vel:vel.clone(),dmg,blast,grav,life:14,team,fromPlayer:team==='player',scale:scale||1,trail:rocket});
@@ -1162,7 +1287,7 @@ function updateProjs(dt){
     const list=targetsFor(p.team);
     for(const u of list){if(!u.alive)continue;if(segHitsUnit(p.prevPos,p.pos,u)){hit=u;break;}}
     if(!hit&&(p.kind==='missile'||p.kind==='cruise')&&p.target&&p.target.alive&&p.pos.distanceTo(p.target.c)<5+p.target.r*.35)hit=p.target;
-    if(!hit&&p.flak){for(const u of list){if(u.alive&&u.domain==='air'&&p.pos.distanceTo(u.c)<8+u.r*.3){hit=u;break;}}}
+    if(!hit&&(p.flak||(p.kind==='shell'&&p.fromPlayer&&p.blast>=10))){for(const u of list){if(u.alive&&u.domain==='air'&&p.pos.distanceTo(u.c)<8+u.r*.3){hit=u;break;}}}
     if(hit){impact(p,hit,'unit');removeProj(i);continue;}
     if(BG.list.length){let hb=null;for(const tt of [.5,1]){_e.copy(p.prevPos).lerp(p.pos,tt);const b=bldAt(_e.x,_e.z,0);if(b&&_e.y<b.top){hb=b;break;}}if(hb){p.hitB=hb;impact(p,null,'bld');removeProj(i);continue;}}
     const gh=height(p.pos.x,p.pos.z);
@@ -1176,7 +1301,7 @@ function updateProjs(dt){
 }
 function removeProj(i){const p=G.projs[i];scene.remove(p.mesh);G.projs.splice(i,1);}
 function impact(p,u,where){
-  if(u)damage(u,p.dmg,p);
+  if(u)damage(u,p.dmg*(p.soft&&u.K&&u.K.armored?.1:1),p);
   if(where==='bld'&&p.hitB)damageBld(p.hitB,p.dmg*(p.kind==='bullet'?.3:1),p.pos);
   if(p.blast>0){
     blastDamage(p.pos,p.blast,p.dmg*.55,p.team,u);
@@ -1196,7 +1321,8 @@ function damage(u,amt,src){
 }
 function kill(u,src){
   if(!u.alive)return;u.alive=false;u.hp=0;
-  explode(u.c,Math.min(26,6+u.r*.7));
+  if(u.soldier){fx(false,u.c,_e.set(0,1,0),1.5,2,1.2,0x8a8478,.5);if(u.team==='ally')pushFeed('분대원 전사');}
+  else explode(u.c,Math.min(26,6+u.r*.7));
   if(u.team==='enemy'){
     const sc=Math.round(u.K.score*(1+G.wave*.1)*(G.player&&G.player.paintMod?G.player.paintMod.score:1));
     if(src&&src.fromPlayer){G.score+=sc;G.kills++;pushFeed(`${u.name} 격파 +${sc}`);}else{G.score+=Math.round(sc*.5);pushFeed(`${u.name} 격파 (지원) +${Math.round(sc*.5)}`);}
@@ -1205,6 +1331,7 @@ function kill(u,src){
   if(u===G.player){G.state='dead';G.deadT=3;try{document.exitPointerLock&&document.exitPointerLock();}catch(e){}}
 }
 function makeWreck(u){
+  if(u.soldier){G.wrecks.push({model:u.model,parts:u.parts,dom:'soldier',fall:0,dir:Math.random()<.5?1:-1,y0:u.model.position.y,t:u===G.player?99:6,keep:u===G.player});return;}
   if(u===G.player){u.model.traverse(o=>{if(o.isMesh&&o.material!==WRECK&&!(o.material.isMeshBasicMaterial))o.material=WRECK;});G.wrecks.push({model:u.model,dom:u.domain,t:8,vel:u.domain==='air'?(u.vel||new V3()).clone():new V3(),spin:rand(-1,1),keep:true});return;}
   u.model.traverse(o=>{if(o.isMesh&&!(o.material.isMeshBasicMaterial))o.material=WRECK;});
   G.wrecks.push({model:u.model,dom:u.domain,t:u.domain==='air'?12:7,vel:u.domain==='air'?(u.vel||new V3()).clone():new V3(),spin:rand(-1.5,1.5)});
@@ -1212,10 +1339,15 @@ function makeWreck(u){
 function updateWrecks(dt){
   for(let i=G.wrecks.length-1;i>=0;i--){
     const w=G.wrecks[i],m=w.model;w.t-=dt;
+    if(w.dom==='soldier'){
+      if(w.fall<1){w.fall=Math.min(1,w.fall+dt*1.8);const e=w.fall*w.fall,P=w.parts;m.rotation.x=w.dir*e*1.42;m.position.y=w.y0+Math.sin(w.fall*Math.PI)*.1;
+        if(P&&P.knL){const k=Math.min(1,w.fall*2.5);P.knL.rotation.x=lerp(.1,1.3,k)*(1-e*.7);P.knR.rotation.x=lerp(.1,.9,k)*(1-e*.7);P.hips.position.y=.92-.32*k*(1-e);P.torso.rotation.x=-w.dir*.3*k;}}
+      if(w.t<1&&!w.keep)m.position.y-=dt*.6;
+    }
     if(w.dom==='air'){w.vel.y-=35*dt;w.vel.multiplyScalar(Math.pow(.7,dt));m.position.addScaledVector(w.vel,dt);m.rotateZ(w.spin*dt*3);m.rotateX(dt*.4);
       if(Math.random()<dt*25)fx(false,m.position,null,4,6,2.2,0x2e2c2a,.7);if(Math.random()<dt*20)fx(true,m.position,null,3,2,.3,0xff9a40,1);
       const g=Math.max(height(m.position.x,m.position.z),0);if(m.position.y<g+1){explode(m.position,10);w.t=0;}}
-    else{if(w.dom==='sea'){m.position.y-=dt*1.1;m.rotation.z+=w.spin*dt*.05;}
+    else if(w.dom!=='soldier'){if(w.dom==='sea'){m.position.y-=dt*1.1;m.rotation.z+=w.spin*dt*.05;}
       if(Math.random()<dt*10)fx(false,_e.copy(m.position).add(_f.set(rand(-3,3),3,rand(-3,3))),_f.set(0,4,0),5,7,3.5,0x2c2a28,.6,.98,1);
       if(Math.random()<dt*8)fx(true,_e.copy(m.position).setY(m.position.y+2),null,3,1,.4,0xff8a3a,1);}
     if(w.t<=0){if(!w.keep)disposeModel(m);else m.visible=false;G.wrecks.splice(i,1);}
@@ -1239,7 +1371,8 @@ function updatePlayer(dt){
   if(p.repairT>0){p.repairT-=dt;p.hp=Math.min(p.maxHp,p.hp+p.maxHp*.35/5*dt);if(Math.random()<dt*12)fx(true,_e.copy(p.c).add(rv(p.r*.4)),_f.set(0,3,0),2,0,.6,0x8ef0a0,.8);}
   if(p.smoke>0&&Math.random()<dt*14)fx(false,_e.copy(p.pos).add(_f.set(rand(-12,12),rand(1,5),rand(-12,12))),_f.set(rand(-1,1),.4,rand(-1,1)),8,4,4,0xb9bcb6,.75,.99,.2);
   const ax=axes(),T=p.T;
-  if(p.domain==='land'){
+  if(p.cls==='infantry')infantryMove(p,dt,ax);
+  else if(p.domain==='land'){
     const tgtSp=ax.y>0?ax.y*T.speed:ax.y*T.speed*.5;
     p.speed+=clamp(tgtSp-p.speed,-14*dt,10*dt);
     p.yaw-=ax.x*T.turn*dt;
@@ -1248,6 +1381,7 @@ function updatePlayer(dt){
     const fr=3.8*(T.scale||1)*(p.speed<0?-1:1);
     if(okLand(nx,nz)&&okLand(nx+Math.sin(p.yaw)*fr,nz+Math.cos(p.yaw)*fr)&&st<1.1){p.pos.x=nx;p.pos.z=nz;if(st>.35)p.speed*=1-dt*1.2;}else p.speed*=.2;
     placeGround(p,3.5*(T.scale||1),1.8*(T.scale||1));
+    {const ac=(p.speed-(p.lastSp||0))/Math.max(dt,1e-4);p.lastSp=p.speed;p.squat=lerp(p.squat||0,clamp(-ac*.006,-.05,.05),Math.min(1,dt*6));p.model.rotation.x+=p.squat;}
     if(Math.abs(p.speed)>4&&Math.random()<dt*14)fx(false,_e.copy(p.pos).addScaledVector(_f.set(-Math.sin(p.yaw),0,-Math.cos(p.yaw)),4),_f.set(0,1.5,0),2.5,3,1.5,TP.dunes?0xc8a878:0x8a7c66,.45);
   }else if(p.domain==='sea'){
     p.throttle=clamp(p.throttle+ax.y*.55*dt,-.35,1);
@@ -1315,7 +1449,7 @@ function updateCamera(dt){
   const air=p.domain==='air';
   const aim=aimDir(_a);
   const dist=p.camDist*(G.zoom?.65:1)*G.camScale;
-  const pivot=_b.copy(p.model.position);pivot.y+=p.eye;
+  const pivot=_b.copy(p.model.position);pivot.y+=p.eye;if(p.cls==='infantry'){pivot.x-=Math.cos(G.camYaw)*.7;pivot.z+=Math.sin(G.camYaw)*.7;}
   const off=_c.copy(aim).multiplyScalar(-dist);off.y+=dist*(air?.18:.26);
   G.camOff.lerp(off,1-Math.exp(-dt*(air?9:18)));
   camera.position.copy(pivot).add(G.camOff);
@@ -1323,7 +1457,7 @@ function updateCamera(dt){
   if(BG.list.length){const tgt=_f.copy(camera.position);for(let s=1;s<=12;s++){_e.copy(pivot).lerp(tgt,s/12);if(solidAt(_e.x,_e.y,_e.z)){camera.position.copy(pivot).lerp(tgt,Math.max(.12,(s-1.5)/12));break;}}}
   if(G.shake>0){camera.position.add(rv(G.shake*1.4));G.shake=Math.max(0,G.shake-dt*2.2);}
   camera.lookAt(_d.copy(pivot).addScaledVector(aim,dist*1.6));
-  const fov=G.zoom?(air?42:28):(air?66:60)+(p.boost>0?6:0);
+  const fov=G.zoom?(air?42:p.T.scope?9:p.cls==='infantry'?42:28):(air?66:60)+(p.boost>0?6:0);
   camera.fov=lerp(camera.fov,fov,1-Math.exp(-dt*8));camera.updateProjectionMatrix();
   camera.updateMatrixWorld();
 }
@@ -1354,9 +1488,12 @@ function updateTurrets(dt){
   for(const t of tur){
     aimTurret(t,p.yaw,G.aim,p.domain==='land'?1.6:.9,dt);
     t.muzzles[0].getWorldPosition(_e);
-    const def=p.domain==='land'?WEAPONS.tank_gun:WEAPONS[p.cls==='carrier'?'naval_gun_s':'naval_gun'];
-    const ang=ballistic(_e,G.aim,def.speed,def.grav);
-    pitchBarrel(t,ang,p.domain==='land'?-.15:-.1,p.domain==='land'?.4:.75);
+    const cw=p.w[p.wi].def;
+    const def=p.cls==='infantry'?(cw.kind==='shell'?cw:{speed:5000,grav:.01}):p.domain==='land'?WEAPONS.tank_gun:WEAPONS[p.cls==='carrier'?'naval_gun_s':'naval_gun'];
+    const hd=Math.hypot(G.aim.x-_e.x,G.aim.z-_e.z),up=G.aim.y-_e.y;
+    const ang=(up>40&&up>hd*.25)?Math.atan2(up,hd):ballistic(_e,G.aim,def.speed,def.grav);
+    const maxE=p.domain==='land'?(p.T.id==='spaag'||p.cls==='infantry'?1.3:.4):1.3;
+    pitchBarrel(t,ang,p.domain==='land'?-.15:-.1,maxE);
   }
 }
 
@@ -1375,9 +1512,10 @@ function fireWeapon(){
         if(aimTurret(t,p.yaw,G.aim,0,0)>.22)continue;
         for(const mz of t.muzzles){mz.getWorldPosition(_a);t.pit.getWorldDirection(_b);
           const v=_c.copy(_b).multiplyScalar(D.speed);const sp=p.domain==='land'?.002:.006;v.x+=rand(-1,1)*sp*D.speed;v.y+=rand(-1,1)*sp*D.speed;v.z+=rand(-1,1)*sp*D.speed;
-          spawnShell('player',_a,v,D.dmg*(T.gunDmg||1),D.blast*(T.barrels>=3?1.3:1),D.grav,T.barrels>=3?1.6:1);muzzleFlash(_a,_b);fired++;}
+          spawnShell('player',_a,v,D.dmg*(T.gunDmg||1),D.blast*(T.barrels>=3?1.3:1),D.grav,T.barrels>=3?1.6:(p.cls==='infantry'?.45:1),D.rocket);muzzleFlash(_a,_b);fired++;}
       }
       if(!fired)return;
+      if(isFinite(w.ammo))w.ammo--;
       w.cd=D.cd*(T.gunCd||1);if(p.domain==='land')G.shake=Math.max(G.shake,.25);else G.shake=Math.max(G.shake,.15*(T.barrels||1));
       break;}
     case 'bullet':{
@@ -1386,12 +1524,14 @@ function fireWeapon(){
       else{
         if(p.parts.ciws&&p.parts.ciws.length){p.cd2.ciws=(p.cd2.ciws+1)%p.parts.ciws.length;p.parts.ciws[p.cd2.ciws].getWorldPosition(_a);}
         else if(p.cls==='tank'&&D.flak){const t=p.parts.turrets[0];t.muzzles[(G.time*20|0)%2].getWorldPosition(_a);}
+        else if(p.cls==='infantry'){p.parts.turrets[0].muzzles[0].getWorldPosition(_a);}
         else{p.parts.turrets[0].tur.getWorldPosition(_a);_a.y+=1.6*(T.scale||1);}
         from=_a;let tgtPt=G.aim;
         if(D.autoAir){let best=null,ba=.2;const cd=_cf;for(const e of G.enemies){if(!e.alive||e.domain!=='air')continue;const v=_c.copy(e.c).sub(camera.position);if(v.length()>D.range+200)continue;const a=v.normalize().angleTo(cd);if(a<ba){ba=a;best=e;}}if(best)tgtPt=leadPt(from,best,D.speed,_d);}
-        const dir=_b.copy(tgtPt).sub(from).normalize();spawnBullet('player',from,dir,D.speed,D.dmg*p.paintMod.dmg,D.spread,!!D.flak,null,D.range);
-        if(Math.random()<.5)fx(true,_e.copy(from).addScaledVector(dir,1),null,1.6,0,.06,0xffe0a0,1);
+        const dir=_b.copy(tgtPt).sub(from).normalize();const pr=spawnBullet('player',from,dir,D.speed,D.dmg*p.paintMod.dmg,D.spread*(G.zoom&&p.cls==='infantry'?.3:1),!!D.flak,null,D.range);if(pr&&D.soft)pr.soft=true;if(p.cls==='infantry')p.parts.recoil=D.dmg>100?2.5:1;
+        if(Math.random()<.5)fx(true,_e.copy(from).addScaledVector(dir,1),null,p.cls==='infantry'?.7:1.6,0,.06,0xffe0a0,1);
       }
+      if(isFinite(w.ammo))w.ammo--;
       w.cd=D.cd;break;}
     case 'missile':case 'cruise':{
       let from,dir;
@@ -1423,6 +1563,7 @@ function useSkill(i){
     case 'bombers':for(let k=0;k<T.bombers;k++)G.sched.push({t:k*.9,fn:()=>{if(!p.alive)return;p.parts.launch.getWorldPosition(_a);spawnAlly('bomber',_a);}});break;
     case 'smoke':p.smoke=D.dur;for(let k=0;k<30;k++)fx(false,_e.copy(p.pos).add(_f.set(rand(-14,14),rand(1,6),rand(-14,14))),_f.set(rand(-2,2),1,rand(-2,2)),9,5,6,0xc4c6c0,.8,.99,.1);break;
     case 'aps':p.aps=D.dur;p.hp=Math.min(p.maxHp,p.hp+p.maxHp*.15);break;
+    case 'medic':{p.repairT=D.dur;const n=refillSquad(1);if(n)pushFeed('쓰러진 분대원 복귀');break;}
     case 'artillery':{const c=G.aim.clone();for(let k=0;k<14;k++)G.sched.push({t:.8+k*.18,fn:()=>{const tp=_a.set(c.x+rand(-28,28),0,c.z+rand(-28,28));const st=_b.set(tp.x+rand(-30,30),Math.max(height(tp.x,tp.z),0)+380,tp.z+rand(-30,30));spawnShell('player',st,_c.set((tp.x-st.x)/2,-150,(tp.z-st.z)/2),160,14,20,1.3);}});banner('','포병 지원 요청 — 탄착까지 약 3초',1.4);break;}
     case 'flare':p.flare=D.dur;for(let k=0;k<16;k++)G.sched.push({t:k*.12,fn:()=>{if(!p.alive)return;const b=_e.copy(p.pos).addScaledVector(_f.set(0,0,-1).applyQuaternion(p.q),6);fx(true,b,_f.copy(p.vel).multiplyScalar(.3).add(_a.set(rand(-25,25),rand(-20,-5),rand(-25,25))),3.5,-1,2.2,0xfff0b0,1,.97,-15);}});break;
     case 'afterburner':p.boost=D.dur;break;
@@ -1450,7 +1591,7 @@ function updateHUD(dt){
   let s1;
   if(p.domain==='air')s1=`<span>${Math.round(p.speed*3.6)} km/h · 고도 ${Math.round(p.pos.y-Math.max(0,height(p.pos.x,p.pos.z)))} m · 추력 <b>${Math.round(p.throttle*100)}%</b></span>`;
   else if(p.domain==='sea')s1=`<span>${(Math.abs(p.speed)*1.94/1.2).toFixed(0)} 노트 · 속도 단계 <b>${p.throttle<-.05?'후진':Math.round(p.throttle*100)+'%'}</b></span>`;
-  else s1=`<span>속도 <b>${Math.round(Math.abs(p.speed)*3.6)} km/h</b></span>`;
+  else s1=`<span>속도 <b>${Math.round(Math.abs(p.speed)*3.6)} km/h</b>${p.cls==='infantry'?` · 분대원 <b>${G.allies.filter(a=>a.soldier).length} / ${p.T.squad}</b>`:''}</span>`;
   $('#hS1').innerHTML=s1;
   p.w.forEach((w,i)=>{w.el.classList.toggle('on',i===p.wi);w.el.classList.toggle('empty',w.ammo<=0);w.el.classList.toggle('rl',w.reload>0);
     if(w.reload>0){w.el.querySelector('.a').textContent='재장전 '+Math.ceil(w.reload)+'초';w.el.querySelector('.cd').style.width=((1-w.reload/w.rt)*100)+'%';}
@@ -1533,7 +1674,9 @@ function drawOverlay(dt){
       c.font='12px "Share Tech Mono", monospace';}
   }
   // crosshair
-  const cx=W/2,cy=H/2;c.strokeStyle='rgba(226,234,191,.9)';c.lineWidth=1.5;
+  const cx=W/2,cy=H/2;
+  if(G.zoom&&p.T.scope&&p.alive){const R=Math.min(W,H)*.44;c.fillStyle='rgba(4,6,5,.94)';c.beginPath();c.rect(0,0,W,H);c.arc(cx,cy,R,0,TAU,true);c.fill();c.strokeStyle='rgba(0,0,0,.85)';c.lineWidth=1.2;c.beginPath();c.moveTo(cx-R,cy);c.lineTo(cx+R,cy);c.moveTo(cx,cy-R);c.lineTo(cx,cy+R);c.stroke();}
+  c.strokeStyle='rgba(226,234,191,.9)';c.lineWidth=1.5;
   c.beginPath();
   if(w.def.kind==='bullet'){c.arc(cx,cy,14,0,TAU);c.moveTo(cx-3,cy);c.lineTo(cx+3,cy);}
   else if(w.def.kind==='shell'){c.moveTo(cx-18,cy);c.lineTo(cx-6,cy);c.moveTo(cx+6,cy);c.lineTo(cx+18,cy);c.moveTo(cx,cy+6);c.lineTo(cx,cy+16);}
@@ -1572,7 +1715,7 @@ function frame(now){
     G.deadT-=dt;G.camYaw+=dt*.25;updateCamera(dt);if(G.deadT<=0&&$('#over').hidden)showOver();
   }
   for(const e of G.enemies)if(e.alive)updateEnemy(e,dt);
-  for(const a of G.allies)if(a.alive)airAI(a,dt);
+  for(const a of G.allies)if(a.alive)(a.domain==='air'?airAI:squadAI)(a,dt);
   for(let i=G.sched.length-1;i>=0;i--){const s=G.sched[i];s.t-=dt;if(s.t<=0){G.sched.splice(i,1);s.fn();}}
   updateProjs(dt);updateWrecks(dt);updateFX(dt);
   for(const a of G.allies)if(!a.alive&&a.leave){disposeModel(a.model);}
@@ -1580,7 +1723,7 @@ function frame(now){
   // waves
   if(G.state==='play'){
     if(G.waveActive&&G.enemies.length===0&&!G.sched.length){G.waveActive=false;G.inter=7;
-      p.hp=Math.min(p.maxHp,p.hp+p.maxHp*.25);for(const w of p.w){w.ammo=w.max;w.reload=0;}
+      p.hp=Math.min(p.maxHp,p.hp+p.maxHp*.25);for(const w of p.w){w.ammo=w.max;w.reload=0;}const rf=refillSquad();if(rf)pushFeed(`분대원 ${rf}명 보충`);
       G.score+=G.wave*200;banner(`웨이브 ${G.wave} 완료`,'보너스 +'+(G.wave*200)+' · 내구도 25% 수리, 탄약 보급',3);}
     if(!G.waveActive){G.inter-=dt;if(G.inter<=0)startWave(G.wave+1);}
   }
@@ -1624,10 +1767,10 @@ addEventListener('mousemove',e=>{
   if(G.state!=='play'||G.paused)return;
   const locked=document.pointerLockElement===glc;
   if(!locked&&!e.buttons)return;
-  const sens=(G.zoom?.0011:.0022);
+  const sens=G.zoom?(G.player&&G.player.T.scope?.00035:.0011):.0022;
   G.camYaw-=(e.movementX||0)*sens;G.camPitch-=(e.movementY||0)*sens;clampPitch();
 });
-function clampPitch(){const air=G.player&&G.player.domain==='air';G.camPitch=clamp(G.camPitch,air?-1.4:-.55,air?1.4:.55);}
+function clampPitch(){const air=G.player&&G.player.domain==='air';G.camPitch=clamp(G.camPitch,air?-1.4:-.55,air?1.4:1.35);}
 glc.addEventListener('wheel',e=>{if(G.state!=='play'||!G.player)return;e.preventDefault();const n=G.player.w.length;selWeapon((G.player.wi+(e.deltaY>0?1:-1)+n)%n);},{passive:false});
 // touch
 glc.addEventListener('touchstart',e=>{
@@ -1666,7 +1809,7 @@ function renderMenu(){
   const cc=$('#classCards');cc.innerHTML='';
   for(const k of Object.keys(CLASSES)){const C=CLASSES[k];const b=document.createElement('button');b.type='button';b.className='card';b.setAttribute('aria-pressed',S.cls===k);
     b.innerHTML=`<svg viewBox="0 0 120 40" aria-hidden="true">${C.svg}</svg><b></b><span></span>`;b.querySelector('b').textContent=C.name;b.querySelector('span').textContent=C.desc;
-    b.addEventListener('click',()=>{if(S.cls===k)return;S.cls=k;S.type=Math.min(1,C.types.length-1);if(k==='tank'&&TERRAINS[S.terrain].noLand){S.terrain='coast';buildWorld();}renderMenu();setPreview();});cc.append(b);}
+    b.addEventListener('click',()=>{if(S.cls===k)return;S.cls=k;S.type=Math.min(1,C.types.length-1);if(CLASSES[k].domain==='land'&&TERRAINS[S.terrain].noLand){S.terrain='coast';buildWorld();}renderMenu();setPreview();});cc.append(b);}
   const tl=$('#typeList');tl.innerHTML='';const C=CLASSES[S.cls];
   if(S.type>=C.types.length)S.type=0;
   C.types.forEach((T,i)=>{const b=document.createElement('button');b.type='button';b.className='tbtn';b.setAttribute('aria-pressed',S.type===i);
@@ -1684,8 +1827,8 @@ function renderMenu(){
   const T=C.types[S.type];const lo=$('#loadout');lo.innerHTML='';
   (T.weapons||C.weapons).forEach((id,i)=>{const d=WEAPONS[id];const r=document.createElement('div');r.className='lo';r.innerHTML=`<kbd>${i+1}</kbd><span><span class="n"></span> <small></small></span>`;r.querySelector('.n').textContent=d.name;r.querySelector('small').textContent=d.sub;lo.append(r);});
   C.skills.forEach((id,i)=>{const d=SKILLS[id];const r=document.createElement('div');r.className='lo';r.innerHTML=`<kbd>${'QER'[i]}</kbd><span><span class="n"></span> <small></small></span>`;r.querySelector('.n').textContent=d.name;r.querySelector('small').textContent=d.desc;lo.append(r);});
-  seg($('#optTerrain'),TERRAINS,'terrain',()=>{if(S.cls==='tank'&&TERRAINS[S.terrain].noLand)S.terrain='coast';buildWorld();renderMenu();setPreview();});
-  if(S.cls==='tank'){const ks=Object.keys(TERRAINS);[...$('#optTerrain').children].forEach((b,i)=>{if(TERRAINS[ks[i]].noLand){b.disabled=true;b.title='전차는 바다 지형에서 출격할 수 없어요';}});}
+  seg($('#optTerrain'),TERRAINS,'terrain',()=>{if(CLASSES[S.cls].domain==='land'&&TERRAINS[S.terrain].noLand)S.terrain='coast';buildWorld();renderMenu();setPreview();});
+  if(CLASSES[S.cls].domain==='land'){const ks=Object.keys(TERRAINS);[...$('#optTerrain').children].forEach((b,i)=>{if(TERRAINS[ks[i]].noLand){b.disabled=true;b.title=CLASSES[S.cls].name+'(은)는 바다 지형에서 출격할 수 없어요';}});}
   seg($('#optTime'),TIMES,'time',()=>{buildWorld();setPreview();});
   seg($('#optSize'),SIZES,'size',()=>{buildWorld();setPreview();});
   seg($('#optDiff'),DIFFS,'diff');
@@ -1697,7 +1840,7 @@ function renderMenu(){
 $('#reroll').addEventListener('click',()=>{S.seed=(Math.random()*1e6)|0;buildWorld();setPreview();});
 $('#startBtn').addEventListener('click',()=>{startGame();});
 
-if(S.cls==='tank'&&TERRAINS[S.terrain].noLand)S.terrain='coast';
+if(CLASSES[S.cls]&&CLASSES[S.cls].domain==='land'&&TERRAINS[S.terrain].noLand)S.terrain='coast';
 buildWorld();renderMenu();setPreview();
 requestAnimationFrame(frame);
 })();
