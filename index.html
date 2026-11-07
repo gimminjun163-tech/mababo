@@ -219,13 +219,14 @@ details.keys b{color:var(--hud);font-weight:500}
         <div class="optrow"><span class="lab">난이도</span><div id="optDiff" class="seg"></div></div>
         <div class="optrow"><span class="lab">탄약을 다 썼을 때</span><div id="optReload" class="seg"></div></div>
         <div class="optrow" id="rowSquad"><span class="lab">보병 편성</span><div id="optSquad" class="seg"></div></div>
+        <div class="optrow" id="rowSquadMove"><span class="lab">분대원 이동 (게임 중 G키로 전환)</span><div id="optSquadMove" class="seg"></div></div>
         <button id="reroll" class="ghost" type="button">같은 지형 종류로 새 지도 만들기</button>
         <button id="startBtn" class="go" type="button">출격</button>
         <details class="keys">
           <summary>조작법</summary>
           <p><b>전차 · 함선</b> W/S 전진·후진 (함선은 속도 단계 조절), A/D 선회, 마우스로 조준, 좌클릭 발사, 우클릭 확대</p>
           <p><b>전투기</b> W/S 추력, 마우스를 움직인 방향으로 기체가 따라감, A/D 롤</p>
-          <p><b>보병</b> WASD로 보는 방향 기준 이동, Shift 달리기, 우클릭 조준(저격수는 조준경). 분대원이 따라오며 가까운 적을 쏩니다. 소총탄은 장갑 차량에 거의 안 들어가니 대전차 로켓이나 대물 저격총을 쓰세요.</p>
+          <p><b>보병</b> WASD로 보는 방향 기준 이동, Shift 달리기, 우클릭 조준(저격수는 조준경). 분대원이 따라오며 가까운 적을 쏩니다. 소총탄은 장갑 차량에 거의 안 들어가니 대전차 로켓이나 대물 저격총을 쓰세요. 적 병사의 머리를 맞히면 헤드샷(피해 3배, 점수 1.5배)이고, G키로 분대원을 나를 따라오게 할지 자유롭게 움직이게 할지 바꿀 수 있어요.</p>
           <p><b>공통</b> 1~4 또는 휠로 무기 선택, Q/E/R 스킬 바로 사용, Tab 스킬 선택, 스페이스 선택된 스킬 사용, C 시점 거리, Esc 일시정지. 미사일은 목표를 조준선 가까이 두면 잠금됩니다. 미사일·폭탄을 다 쓰면 재장전합니다. 설정에서 자동 또는 수동을 고를 수 있고, F키(터치는 선택된 무기 칸을 한 번 더)로 언제든 직접 재장전할 수 있어요.</p>
           <p><b>터치</b> 왼쪽 화면 드래그로 이동, 오른쪽 드래그로 조준, 발사 버튼을 누르고 있기</p>
         </details>
@@ -275,7 +276,7 @@ const WEAPONS={
   amr:{name:'대물 저격총',sub:'저격 · 장갑 관통',kind:'bullet',speed:1400,dmg:220,cd:2.2,spread:.001,range:2000,ammo:5},
   grenade:{name:'수류탄',sub:'투척 · 범위 피해',kind:'shell',speed:30,dmg:170,blast:9,cd:1,grav:14,ammo:4},
   rpg:{name:'대전차 로켓',sub:'로켓 · 장갑 차량',kind:'shell',rocket:true,speed:170,dmg:420,blast:7,cd:1.5,grav:3,ammo:3},
-  manpads:{name:'휴대용 대공미사일',sub:'미사일 · 공중 잠금',kind:'missile',target:'air',speed:400,dmg:240,blast:10,cd:2,ammo:2,turn:4.5,lock:2400},
+  manpads:{name:'휴대용 대공미사일',sub:'미사일 · 공중 잠금',kind:'missile',target:'air',speed:520,dmg:260,blast:12,cd:1.5,ammo:4,turn:6,lock:2600,cone:.4},
   bomb:{name:'유도 폭탄',sub:'폭탄 · 투하',kind:'bomb',target:'surface',dmg:720,blast:30,cd:1.2,ammo:4,lock:2200},
 };
 const SKILLS={
@@ -324,8 +325,8 @@ const CLASSES={
     svg:'<circle cx="30" cy="10" r="4"/><path d="M25 15h10l2 10h-3l-1 12h-3l-1-8-1 8h-3l-1-12h-2z"/><circle cx="60" cy="7" r="5"/><path d="M54 13h12l3 12h-4l-1 13h-4l-1-9-1 9h-4l-1-13h-3z"/><path d="M63 16h40v3H63z"/><circle cx="90" cy="10" r="4"/><path d="M85 15h10l2 10h-3l-1 12h-3l-1-8-1 8h-3l-1-12h-2z"/>',
     types:[
       {id:'rifle',name:'소총 여단',spec:'분대원 5명 · 돌격소총 · 대전차 로켓',hp:220,speed:5.2,turn:1,scale:.35,squad:5,bars:[3,4,3]},
-      {id:'sniper',name:'저격수 부대',spec:'관측수 2명 · 저격소총 · 대물 저격총',hp:150,speed:5,turn:1,scale:.35,squad:2,scope:true,weapons:['sniper','amr','smg','grenade'],bars:[2,4,5]},
-      {id:'lmg',name:'기관총 분대',spec:'분대원 3명 · 경기관총 · 수류탄',hp:280,speed:4.4,turn:1,scale:.35,squad:3,weapons:['lmg','rifle','grenade','rpg'],bars:[4,2,4]},
+      {id:'sniper',name:'저격수 부대',spec:'관측수 2명 · 저격소총 · 대물 저격총 · 대공미사일',hp:150,speed:5,turn:1,scale:.35,squad:2,scope:true,weapons:['sniper','amr','smg','manpads'],bars:[2,4,5]},
+      {id:'lmg',name:'기관총 분대',spec:'분대원 3명 · 경기관총 · 대전차 로켓 · 대공미사일',hp:280,speed:4.4,turn:1,scale:.35,squad:3,weapons:['lmg','grenade','rpg','manpads'],bars:[4,2,4]},
     ]},
   jet:{name:'전투기',desc:'하늘을 가르며 공대공, 공대지 미사일과 폭탄을 퍼붓는 고속 기체.',domain:'air',
     weapons:['cannon','aam','agm','bomb'],skills:['flare','afterburner','cruise_salvo'],
@@ -419,7 +420,8 @@ function shipWave(u,len,wid,dt,extra){
   u.wy=lerp(u.wy||0,(hb+hs+hr+hl+hc)/5*.9,k);u.wp=lerp(u.wp||0,-Math.atan2(hb-hs,len*.8),k);u.wr=lerp(u.wr||0,Math.atan2(hr-hl,wid*1.2),k);
   u.pos.y=u.wy;u.model.position.copy(u.pos);u.model.rotation.set(u.wp,u.yaw,u.wr+(extra||0),'YXZ');
 }
-const S={cls:'ship',type:1,terrain:'coast',time:'day',size:'normal',diff:'normal',reload:'auto',paint:'std',wave:'normal',squadMode:'squad',seed:(Math.random()*1e6)|0};
+const SQUADMOVES={follow:{name:'나를 따라오기'},free:{name:'자유롭게 (적에게 직접 진격)'}};
+const S={cls:'ship',type:1,terrain:'coast',time:'day',size:'normal',diff:'normal',reload:'auto',paint:'std',wave:'normal',squadMode:'squad',squadMove:'follow',seed:(Math.random()*1e6)|0};
 try{const s=JSON.parse(localStorage.getItem('steelfront.settings')||'null');if(s&&CLASSES[s.cls]&&TERRAINS[s.terrain])Object.assign(S,s,{seed:(Math.random()*1e6)|0});}catch(e){}
 function saveSettings(){try{localStorage.setItem('steelfront.settings',JSON.stringify(S));}catch(e){}}
 function getBest(){try{return JSON.parse(localStorage.getItem('steelfront.best')||'{}');}catch(e){return {};}}
@@ -907,7 +909,7 @@ function createPlayer(){
   else if(p.domain==='sea'){p.camDist=T.len*1.05+22;p.eye=T.len*.17;p.yaw=bestYawAt(p.pos,'sea',400);}
   else{p.camDist=32;p.eye=2.5;p.pos.set(0,380,0);p.yaw=0;p.q=new Q4().setFromAxisAngle(UP,p.yaw);p.speed=lerp(T.min,T.max,.55);p.throttle=.55;}
   if(p.cls==='infantry'){p.camDist=5.5;p.eye=1.75;p.soldier=true;}
-  p.w=(T.weapons||C.weapons).map(id=>{const d=WEAPONS[id];let ammo=d.ammo;if(isFinite(ammo)){if(T.ammo&&typeof T.ammo==='object')ammo=T.ammo[id]!=null?T.ammo[id]:ammo;else ammo=Math.max(1,Math.round(ammo*(T.ammo||1)));}const RT={asm:9,sam:7,cruise:12,atgm:8,sam_t:7,aam:7,agm:9,bomb:10,rifle:2.2,smg:1.8,lmg:5,sniper:3,amr:4,grenade:8,rpg:7,manpads:9};return {id,def:d,ammo,max:ammo,cd:0,reload:0,rt:RT[id]||8};});
+  p.w=(T.weapons||C.weapons).map(id=>{const d=WEAPONS[id];let ammo=d.ammo;if(isFinite(ammo)){if(T.ammo&&typeof T.ammo==='object')ammo=T.ammo[id]!=null?T.ammo[id]:ammo;else ammo=Math.max(1,Math.round(ammo*(T.ammo||1)));}const RT={asm:9,sam:7,cruise:12,atgm:8,sam_t:7,aam:7,agm:9,bomb:10,rifle:2.2,smg:1.8,lmg:5,sniper:3,amr:4,grenade:8,rpg:7,manpads:7};return {id,def:d,ammo,max:ammo,cd:0,reload:0,rt:RT[id]||8};});
   p.wi=0;
   p.sk=C.skills.map(id=>({id,def:SKILLS[id],cd:0}));
   p.cd2={ciws:0,salvo:0};
@@ -925,7 +927,7 @@ function startGame(){
   clearBattle();
   G.player=createPlayer();
   refillSquad();
-  G.state='play';G.paused=false;G.score=0;G.kills=0;G.wave=0;G.time=0;G.vig=0;G.ghost=1;G.feed=[];G.hits=[];
+  G.state='play';G.paused=false;G.score=0;G.kills=0;G.headshots=0;G.hsMark=0;G.wave=0;G.time=0;G.vig=0;G.ghost=1;G.feed=[];G.hits=[];
   G.camYaw=G.player.yaw;G.camPitch=G.player.domain==='air'?0:-.08;G.camOff.set(0,0,0);G.camScale=1;G.zoom=false;
   G.inter=4;G.waveActive=false;
   $('#menu').hidden=true;$('#over').hidden=true;$('#pause').hidden=true;$('#hud').hidden=false;
@@ -1045,7 +1047,8 @@ function moveSurface(e,dt,target,keep){
   let want=Math.atan2(dx,dz);
   if(dist<keep)want+=Math.PI/2*e.side;
   const look=e.domain==='sea'?Math.max(35,e.half.z*1.2):e.soldier?9:22;
-  const probe=a=>{for(const f of [.03,.15,.45,1]){if(!okDomain(e.domain,e.pos.x+Math.sin(a)*look*f,e.pos.z+Math.cos(a)*look*f))return false;}return true;};
+  const okD=(x,z)=>e.soldier?okInf(x,z):okDomain(e.domain,x,z);
+  const probe=a=>{for(const f of [.03,.15,.45,1]){if(!okD(e.pos.x+Math.sin(a)*look*f,e.pos.z+Math.cos(a)*look*f))return false;}return true;};
   e.detT=(e.detT||0)-dt;
   if(!probe(want)&&e.detT>0&&probe(e.detour))want=e.detour;
   else if(!probe(want)){const w0=want;let best=null,bs=-9;
@@ -1056,9 +1059,9 @@ function moveSurface(e,dt,target,keep){
   e.yaw+=clamp(angDiff(e.yaw,want),-turn*dt,turn*dt);
   const sp=e.speed*(dist<keep*.6&&e.domain==='land'?.2:1);
   const nx=e.pos.x+Math.sin(e.yaw)*sp*dt,nz=e.pos.z+Math.cos(e.yaw)*sp*dt;
-  if(okDomain(e.domain,nx,nz)){e.pos.x=nx;e.pos.z=nz;}
-  else if(e.domain==='land'&&okDomain('land',nx,e.pos.z)){e.pos.x=nx;}
-  else if(e.domain==='land'&&okDomain('land',e.pos.x,nz)){e.pos.z=nz;}
+  if(okD(nx,nz)){e.pos.x=nx;e.pos.z=nz;}
+  else if(e.domain==='land'&&okD(nx,e.pos.z)){e.pos.x=nx;}
+  else if(e.domain==='land'&&okD(e.pos.x,nz)){e.pos.z=nz;}
   else{e.yaw+=dt*e.side;e.stuck=(e.stuck||0)+dt;if(e.stuck>4){e.side*=-1;e.stuck=0;}}
   return dist;
 }
@@ -1220,7 +1223,7 @@ function spawnSquad(i){
   const col=(PAINTS[S.paint]||PAINTS.std).col;
   const b=makeSoldier(col==null?DEFCOL.infantry:col,sn?'sniper':(p.T.id==='lmg'&&i===0?'lmg':'rifle'));
   const sp=slotPos(i,new V3());if(!okInf(sp.x,sp.z))sp.copy(p.pos);sp.y=height(sp.x,sp.z);
-  const u={team:'ally',domain:'land',soldier:true,sniper:sn,alive:true,hp:80,maxHp:80,pos:sp,yaw:p.yaw,model:b.g,parts:b,cd:{gun:rand(.3,1.2)},burst:0,slot:i,tgt:null,retgt:0,name:'아군 분대원'};
+  const u={team:'ally',domain:'land',soldier:true,sniper:sn,alive:true,hp:80,maxHp:80,pos:sp,yaw:p.yaw,model:b.g,parts:b,cd:{gun:rand(.3,1.2)},burst:0,slot:i,tgt:null,retgt:0,side:Math.random()<.5?1:-1,speed:p.T.speed*1.25,name:'아군 분대원'};
   u.model.position.copy(sp);scene.add(u.model);computeBox(u);G.allies.push(u);
 }
 function refillSquad(max){
@@ -1230,16 +1233,23 @@ function refillSquad(max){
   return n;
 }
 function squadAI(u,dt){
-  const p=G.player;u.prev.copy(u.pos);let sp=0;
-  if(p&&p.alive){const tg=slotPos(u.slot,_d);const dx=tg.x-u.pos.x,dz=tg.z-u.pos.z,d=Math.hypot(dx,dz);
+  const p=G.player;u.prev.copy(u.pos);let sp=0;u.fmove=false;
+  if(p&&p.alive&&S.squadMove==='free'){
+    u.fret=(u.fret||0)-dt;if(u.fret<=0||!u.ftgt||!u.ftgt.alive){u.fret=2;u.ftgt=null;let bd=1600;for(const e of G.enemies){if(!e.alive||e.domain==='air'||e.K.armored)continue;const d=e.pos.distanceTo(u.pos);if(d<bd){bd=d;u.ftgt=e;}}}
+    const dp=u.pos.distanceTo(p.pos),R=u.sniper?600:240;u.speed=p.T.speed*1.25;
+    if(dp>320){moveSurface(u,dt,p.pos,20);u.fmove=true;}
+    else if(u.ftgt){const d=u.ftgt.pos.distanceTo(u.pos);if(d>R||!(u.tgt&&u.tgt.alive)){moveSurface(u,dt,u.ftgt.pos,R*.5);u.fmove=true;}}
+    else if(dp>35){moveSurface(u,dt,p.pos,25);u.fmove=true;}
+  }
+  else if(p&&p.alive){const tg=slotPos(u.slot,_d);const dx=tg.x-u.pos.x,dz=tg.z-u.pos.z,d=Math.hypot(dx,dz);
     if(d>70&&okInf(tg.x,tg.z)){u.pos.x=tg.x;u.pos.z=tg.z;}
     else if(d>.7){sp=Math.min(d*1.6,p.T.speed*1.8);const nx=u.pos.x+dx/d*sp*dt,nz=u.pos.z+dz/d*sp*dt;if(okInf(nx,nz)){u.pos.x=nx;u.pos.z=nz;}else if(okInf(nx,u.pos.z))u.pos.x=nx;else if(okInf(u.pos.x,nz))u.pos.z=nz;}}
   u.pos.y=height(u.pos.x,u.pos.z);
   u.retgt-=dt;if(u.retgt<=0||!u.tgt||!u.tgt.alive){u.retgt=1.2;u.tgt=null;const R=u.sniper?1700:850,eye=new V3(u.pos.x,u.pos.y+1.5,u.pos.z);
     const cands=G.enemies.filter(e=>e.alive&&e.kind!=='jet'&&e.kind!=='bomber'&&!e.K.armored&&e.pos.distanceTo(u.pos)<R).sort((a,b)=>a.pos.distanceTo(u.pos)-b.pos.distanceTo(u.pos));
     for(const e of cands.slice(0,6)){if(hasLOS(eye,e.c)){u.tgt=e;break;}}}
-  let face=p?p.yaw:u.yaw;const t=u.tgt;const tp=u.parts.turrets[0];
-  if(t){face=Math.atan2(t.c.x-u.pos.x,t.c.z-u.pos.z);u.cd.gun-=dt;
+  let face=S.squadMove==='free'||!p?u.yaw:p.yaw;const t=u.tgt;const tp=u.parts.turrets[0];
+  if(t){if(!u.fmove)face=Math.atan2(t.c.x-u.pos.x,t.c.z-u.pos.z);u.cd.gun-=dt;
     if(u.cd.gun<=0&&Math.abs(angDiff(u.yaw,face))<.3&&(tp.muzzles[0].getWorldPosition(_a),hasLOS(_a,t.c)||(u.tgt=null,u.retgt=0,u.cd.gun=.4,false))){const dir=_b.copy(t.c).sub(_a).normalize();
       const pr=spawnBullet('ally',_a,dir,u.sniper?1500:900,u.sniper?110:9,u.sniper?.0015:.007,false,null,u.sniper?1800:900);if(pr)pr.soft=true;
       fx(true,_e.copy(_a).addScaledVector(dir,.5),null,.8,0,.05,0xffe0a0,1);
@@ -1282,6 +1292,8 @@ function spawnMissile(team,from,dir,o){
 function spawnBomb(team,from,vel,dmg,blast,target){addProj({kind:'bomb',geo:'bomb',mat:PM.bomb,pos:from.clone(),vel:vel.clone(),dmg,blast,grav:9.8*2,life:30,team,fromPlayer:team==='player',target});}
 function muzzleFlash(pos,dir){const d=_f.copy(dir).normalize();const q=pos.clone();fx(true,_e.copy(q).addScaledVector(d,1.5),null,3.5,4,.12,0xffd08a,1);fx(false,q,d.multiplyScalar(4),2.5,4,1,0x8a8478,.45);}
 
+function leadAir(from,e,spd,out){let t=from.distanceTo(e.c)/spd;for(let k=0;k<3;k++){out.copy(e.c).addScaledVector(e.vel,t);t=from.distanceTo(out)/spd;}return out;}
+function segPtDist(a,b,pt){const ab=b.clone().sub(a),l2=ab.lengthSq();let t=l2>0?pt.clone().sub(a).dot(ab)/l2:0;t=clamp(t,0,1);return a.clone().addScaledVector(ab,t).distanceTo(pt);}
 function segHitsUnit(a,b,u){
   // sphere reject
   const ab=_a.copy(b).sub(a),l2=ab.lengthSq();let t=l2>0?_b.copy(u.c).sub(a).dot(ab)/l2:0;t=clamp(t,0,1);
@@ -1332,9 +1344,12 @@ function updateProjs(dt){
     let hit=null;
     const list=targetsFor(p.team);
     for(const u of list){if(!u.alive)continue;if(segHitsUnit(p.prevPos,p.pos,u)){hit=u;break;}}
-    if(!hit&&(p.kind==='missile'||p.kind==='cruise')&&p.target&&p.target.alive&&p.pos.distanceTo(p.target.c)<5+p.target.r*.35)hit=p.target;
+    if(!hit&&(p.kind==='missile'||p.kind==='cruise')&&p.target&&p.target.alive&&p.pos.distanceTo(p.target.c)<(p.target.domain==='air'?10:5)+p.target.r*.35)hit=p.target;
+    if(!hit&&p.soft&&p.team!=='enemy'){for(const u of list){if(u.alive&&u.domain==='air'&&segPtDist(p.prevPos,p.pos,u.c)<3.5+u.r*.4){hit=u;break;}}}
     if(!hit&&(p.flak||(p.kind==='shell'&&p.fromPlayer&&p.blast>=10))){for(const u of list){if(u.alive&&u.domain==='air'&&p.pos.distanceTo(u.c)<8+u.r*.3){hit=u;break;}}}
-    if(hit){impact(p,hit,'unit');removeProj(i);continue;}
+    if(hit){
+      if(p.kind==='bullet'&&hit.soldier&&p.team!=='enemy'&&hit.parts&&hit.parts.hips){const hc=new V3(hit.pos.x,hit.pos.y+1.72+(hit.parts.hips.position.y-.92),hit.pos.z);if(segPtDist(p.prevPos,p.pos,hc)<.3)p.head=true;}
+      impact(p,hit,'unit');removeProj(i);continue;}
     if(BG.list.length){let hb=null;for(const tt of [.5,1]){_e.copy(p.prevPos).lerp(p.pos,tt);const b=bldAt(_e.x,_e.z,0);if(b&&_e.y<b.top){hb=b;break;}}if(hb){p.hitB=hb;impact(p,null,'bld');removeProj(i);continue;}}
     const gh=height(p.pos.x,p.pos.z);
     if(p.pos.y<gh){impact(p,null,'ground');removeProj(i);continue;}
@@ -1347,7 +1362,8 @@ function updateProjs(dt){
 }
 function removeProj(i){const p=G.projs[i];scene.remove(p.mesh);G.projs.splice(i,1);}
 function impact(p,u,where){
-  if(u)damage(u,p.dmg*(p.soft&&u.K&&u.K.armored?.1:1),p);
+  if(u&&p.head){if(p.fromPlayer){G.hsMark=1;G.headshots=(G.headshots||0)+1;}fx(true,new V3(u.pos.x,u.pos.y+1.7,u.pos.z),null,1.2,3,.25,0xff6a50,1);}
+  if(u)damage(u,p.head?Math.max(p.dmg*3,u.maxHp+1):p.dmg*(p.soft&&u.K&&u.K.armored?.1:1),p);
   if(where==='bld'&&p.hitB)damageBld(p.hitB,p.dmg*(p.kind==='bullet'?.3:1),p.pos);
   if(p.blast>0){
     blastDamage(p.pos,p.blast,p.dmg*.55,p.team,u);
@@ -1370,8 +1386,9 @@ function kill(u,src){
   if(u.soldier){fx(false,u.c,_e.set(0,1,0),1.5,2,1.2,0x8a8478,.5);if(u.team==='ally')pushFeed('분대원 전사');}
   else explode(u.c,Math.min(26,6+u.r*.7));
   if(u.team==='enemy'){
-    const sc=Math.round(u.K.score*(1+G.wave*.1)*(G.player&&G.player.paintMod?G.player.paintMod.score:1));
-    if(src&&src.fromPlayer){G.score+=sc;G.kills++;pushFeed(`${u.name} 격파 +${sc}`);}else{G.score+=Math.round(sc*.5);pushFeed(`${u.name} 격파 (지원) +${Math.round(sc*.5)}`);}
+    const hs=!!(src&&src.head);
+    const sc=Math.round(u.K.score*(1+G.wave*.1)*(G.player&&G.player.paintMod?G.player.paintMod.score:1)*(hs?1.5:1));
+    if(src&&src.fromPlayer){G.score+=sc;G.kills++;pushFeed(`${u.name} 격파${hs?' · 헤드샷':''} +${sc}`);}else{G.score+=Math.round(sc*.5);pushFeed(`${u.name} 격파 (지원) +${Math.round(sc*.5)}`);}
   }
   makeWreck(u);
   if(u===G.player){G.state='dead';G.deadT=3;try{document.exitPointerLock&&document.exitPointerLock();}catch(e){}}
@@ -1521,7 +1538,7 @@ function castAim(){
 function updateLock(dt){
   const p=G.player,w=p.w[p.wi];
   if(!w.def.target){G.lockCand=null;G.lockT=0;return;}
-  const o=camera.position,d=_cf;const cone=w.def.kind==='bomb'?.35:.2;
+  const o=camera.position,d=_cf;const cone=w.def.cone||(w.def.kind==='bomb'?.35:.2);
   let best=null,ba=cone;
   for(const e of G.enemies){if(!e.alive)continue;const isAir=e.domain==='air';if((w.def.target==='air')!==isAir)continue;const v=_a.copy(e.c).sub(o);const dist=v.length();if(dist>w.def.lock+p.camDist)continue;const a=v.normalize().angleTo(d);if(a<ba){ba=a;best=e;}}
   if(best&&best===G.lockCand)G.lockT+=dt;else{G.lockCand=best;G.lockT=0;}
@@ -1572,6 +1589,7 @@ function fireWeapon(){
         else if(p.cls==='infantry'){p.parts.turrets[0].muzzles[0].getWorldPosition(_a);}
         else{p.parts.turrets[0].tur.getWorldPosition(_a);_a.y+=1.6*(T.scale||1);}
         from=_a;let tgtPt=G.aim;
+        if(p.cls==='infantry'&&!D.autoAir){let best=null,ba=.09;for(const e of G.enemies){if(!e.alive||e.domain!=='air')continue;const v=_c.copy(e.c).sub(camera.position);if(v.length()>D.range+300)continue;const a1=v.normalize().angleTo(_cf);const lp=leadAir(from,e,D.speed,_d);const a2=_c.copy(lp).sub(camera.position).normalize().angleTo(_cf);const a=Math.min(a1,a2);if(a<ba){ba=a;best=e;}}if(best)tgtPt=leadAir(from,best,D.speed,_d);}
         if(D.autoAir){let best=null,ba=.2;const cd=_cf;for(const e of G.enemies){if(!e.alive||e.domain!=='air')continue;const v=_c.copy(e.c).sub(camera.position);if(v.length()>D.range+200)continue;const a=v.normalize().angleTo(cd);if(a<ba){ba=a;best=e;}}if(best)tgtPt=leadPt(from,best,D.speed,_d);}
         const dir=_b.copy(tgtPt).sub(from).normalize();const pr=spawnBullet('player',from,dir,D.speed,D.dmg*p.paintMod.dmg,D.spread*(G.zoom&&p.cls==='infantry'?.3:1),!!D.flak,null,D.range);if(pr&&D.soft)pr.soft=true;if(p.cls==='infantry')p.parts.recoil=D.dmg>100?2.5:1;
         if(Math.random()<.5)fx(true,_e.copy(from).addScaledVector(dir,1),null,p.cls==='infantry'?.7:1.6,0,.06,0xffe0a0,1);
@@ -1636,7 +1654,7 @@ function updateHUD(dt){
   let s1;
   if(p.domain==='air')s1=`<span>${Math.round(p.speed*3.6)} km/h · 고도 ${Math.round(p.pos.y-Math.max(0,height(p.pos.x,p.pos.z)))} m · 추력 <b>${Math.round(p.throttle*100)}%</b></span>`;
   else if(p.domain==='sea')s1=`<span>${(Math.abs(p.speed)*1.94/1.2).toFixed(0)} 노트 · 속도 단계 <b>${p.throttle<-.05?'후진':Math.round(p.throttle*100)+'%'}</b></span>`;
-  else s1=`<span>속도 <b>${Math.round(Math.abs(p.speed)*3.6)} km/h</b>${p.cls==='infantry'?(p.T.squad?` · 분대원 <b>${G.allies.filter(a=>a.soldier).length} / ${p.T.squad}</b>`:' · <b>단독 작전</b>'):''}</span>`;
+  else s1=`<span>속도 <b>${Math.round(Math.abs(p.speed)*3.6)} km/h</b>${p.cls==='infantry'?(p.T.squad?` · 분대원 <b>${G.allies.filter(a=>a.soldier).length} / ${p.T.squad}</b> (${S.squadMove==='free'?'자유':'따라오기'})`:' · <b>단독 작전</b>'):''}</span>`;
   $('#hS1').innerHTML=s1;
   p.w.forEach((w,i)=>{w.el.classList.toggle('on',i===p.wi);w.el.classList.toggle('empty',w.ammo<=0);w.el.classList.toggle('rl',w.reload>0);
     if(w.reload>0){w.el.querySelector('.a').textContent='재장전 '+Math.ceil(w.reload)+'초';w.el.querySelector('.cd').style.width=((1-w.reload/w.rt)*100)+'%';}
@@ -1711,6 +1729,9 @@ function drawOverlay(dt){
   for(const a of G.allies){if(!a.alive)continue;const cs=_a.copy(a.c).applyMatrix4(view);if(cs.z>0)continue;const s=proj(a.c);c.fillStyle='#82d6ff';c.beginPath();c.moveTo(s.x,s.y-7);c.lineTo(s.x+6,s.y);c.lineTo(s.x,s.y+7);c.lineTo(s.x-6,s.y);c.fill();}
   // lock box
   const w=p.w[p.wi];
+  if(p.cls==='infantry'&&p.alive&&w.def.kind==='bullet'){p.parts.turrets[0].muzzles[0].getWorldPosition(_e);c.strokeStyle='#ffd27a';c.lineWidth=1.6;
+    for(const e of G.enemies){if(!e.alive||e.domain!=='air'||e.c.distanceTo(_e)>w.def.range+300)continue;const lp=leadAir(_e,e,w.def.speed,_f);const cs=_a.copy(lp).applyMatrix4(view);if(cs.z>0)continue;const s=proj(lp);
+      c.beginPath();c.moveTo(s.x,s.y-7);c.lineTo(s.x+7,s.y);c.lineTo(s.x,s.y+7);c.lineTo(s.x-7,s.y);c.closePath();c.stroke();}}
   if(lk&&lk.alive&&w.def.target){
     const cs=_a.copy(lk.c).applyMatrix4(view);
     if(cs.z<0){const s=proj(lk.c);const pr=clamp(G.lockT/.55,0,1);const ok=pr>=1;const sz=lerp(46,24,pr);
@@ -1735,6 +1756,7 @@ function drawOverlay(dt){
   // nose reticle for jets
   if(p.domain==='air'&&p.alive){const f=_b.set(0,0,1).applyQuaternion(p.q);const pt=_c.copy(p.pos).addScaledVector(f,600);const cs=_d.copy(pt).applyMatrix4(view);if(cs.z<0){const s=proj(pt);c.strokeStyle='#a6e07f';c.lineWidth=2;c.beginPath();c.arc(s.x,s.y,9,0,TAU);c.moveTo(s.x-20,s.y);c.lineTo(s.x-9,s.y);c.moveTo(s.x+9,s.y);c.lineTo(s.x+20,s.y);c.moveTo(s.x,s.y-9);c.lineTo(s.x,s.y-16);c.stroke();}}
   // hit marker
+  if(G.hsMark>0){G.hsMark-=dt;const al=clamp(G.hsMark*1.6,0,1);c.save();c.globalAlpha=al;c.fillStyle='#ff5a44';c.font='22px "Black Han Sans", sans-serif';c.fillText('헤드샷!',cx,cy-36-(1-G.hsMark)*12);c.strokeStyle='#ff5a44';c.lineWidth=3;c.beginPath();for(const [a2,b2] of [[-1,-1],[1,-1],[1,1],[-1,1]]){c.moveTo(cx+a2*9,cy+b2*9);c.lineTo(cx+a2*19,cy+b2*19);}c.stroke();c.restore();c.font='12px "Share Tech Mono", monospace';}
   if(G.hitMark>0){G.hitMark-=dt;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();for(const [a,b] of [[-1,-1],[1,-1],[1,1],[-1,1]]){c.moveTo(cx+a*8,cy+b*8);c.lineTo(cx+a*15,cy+b*15);}c.stroke();}
   // damage direction
   G.hits=G.hits.filter(h=>(h.t-=dt)>0);
@@ -1781,7 +1803,7 @@ function frame(now){
 function showOver(){
   const p=G.player;setBest(p.cls,G.score,G.wave);
   $('#oTitle').textContent=G.wave>=10?'영웅적인 최후':'격파됨';
-  $('#oSub').textContent=`${p.T.name}(으)로 ${TERRAINS[S.terrain].name}에서 ${G.wave}번째 웨이브까지 버텼습니다.`;
+  $('#oSub').textContent=`${p.T.name}(으)로 ${TERRAINS[S.terrain].name}에서 ${G.wave}번째 웨이브까지 버텼습니다.`+(G.headshots?` 헤드샷 ${G.headshots}회.`:'');
   $('#oWave').textContent=G.wave;$('#oKills').textContent=G.kills;$('#oScore').textContent=G.score.toLocaleString('ko-KR');
   $('#over').hidden=false;
 }
@@ -1801,6 +1823,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyQ')useSkill(0);if(e.code==='KeyE')useSkill(1);if(e.code==='KeyR')useSkill(2);
   if(e.code==='Tab'&&G.player){e.preventDefault();const n=G.player.sk.length;G.player.si=(G.player.si+(e.shiftKey?n-1:1))%n;}
   if(e.code==='KeyF'&&G.player)reloadWeapon(G.player.w[G.player.wi]);
+  if(e.code==='KeyG'&&G.player&&G.player.cls==='infantry'&&G.player.T.squad){S.squadMove=S.squadMove==='free'?'follow':'free';saveSettings();pushFeed(S.squadMove==='free'?'분대원 자유 이동: 적에게 직접 진격':'분대원 이동: 나를 따라오기');for(const a of G.allies)a.ftgt=null;}
   if(e.code==='Space'&&G.player){e.preventDefault();if(!e.repeat)useSkill(G.player.si);}
   if(e.code==='KeyC'){G.camScale=G.camScale===1?1.6:G.camScale===1.6?.75:1;}
 });
@@ -1880,7 +1903,10 @@ function renderMenu(){
   seg($('#optWave'),WAVES,'wave',setWaveAmp);
   if(!SQUADMODES[S.squadMode])S.squadMode='squad';
   $('#rowSquad').hidden=S.cls!=='infantry';
-  seg($('#optSquad'),SQUADMODES,'squadMode');
+  seg($('#optSquad'),SQUADMODES,'squadMode',()=>renderMenu());
+  if(!SQUADMOVES[S.squadMove])S.squadMove='follow';
+  $('#rowSquadMove').hidden=S.cls!=='infantry'||S.squadMode==='solo';
+  seg($('#optSquadMove'),SQUADMOVES,'squadMove');
   seg($('#optSize'),SIZES,'size',()=>{buildWorld();setPreview();});
   seg($('#optDiff'),DIFFS,'diff');
   if(!RELOADS[S.reload])S.reload='auto';
