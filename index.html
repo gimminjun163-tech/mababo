@@ -154,6 +154,8 @@ details.keys b{color:var(--hud);font-weight:500}
 #touch button{pointer-events:auto;appearance:none;position:absolute;border:2px solid var(--amber);color:var(--amber);background:rgba(243,178,58,.16);font-family:var(--fd)}
 #tFire{right:calc(96px + env(safe-area-inset-right,0px));bottom:calc(88px + env(safe-area-inset-bottom,0px));width:86px;height:86px;border-radius:50%;font-size:18px}
 #tZoom{right:calc(190px + env(safe-area-inset-right,0px));bottom:calc(100px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;font-size:13px}
+#tUp,#tDown{left:calc(16px + env(safe-area-inset-left,0px));width:58px;height:46px;font-size:13px}
+#tUp{bottom:calc(170px + env(safe-area-inset-bottom,0px))}#tDown{bottom:calc(116px + env(safe-area-inset-bottom,0px))}
 #tHide{right:calc(190px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;font-size:13px}
 #tPause{left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));width:64px;height:34px;font-size:13px}
 
@@ -190,6 +192,8 @@ details.keys b{color:var(--hud);font-weight:500}
   <button id="tFire" type="button">발사</button>
   <button id="tZoom" type="button">확대</button>
   <button id="tHide" type="button">잠복</button>
+  <button id="tUp" type="button">상승</button>
+  <button id="tDown" type="button">하강</button>
   <button id="tPause" type="button">정지</button>
 </div>
 
@@ -231,6 +235,7 @@ details.keys b{color:var(--hud);font-weight:500}
           <p><b>전차 · 함선</b> W/S 전진·후진 (함선은 속도 단계 조절), A/D 선회, 마우스로 조준, 좌클릭 발사, 우클릭 확대</p>
           <p><b>전투기</b> W/S 추력, 마우스를 움직인 방향으로 기체가 따라감, A/D 롤</p>
           <p><b>보병</b> WASD로 보는 방향 기준 이동, Shift 달리기, 우클릭 조준(저격수는 조준경). 분대원이 따라오며 가까운 적을 쏩니다. 소총탄은 장갑 차량에 거의 안 들어가니 대전차 로켓이나 대물 저격총을 쓰세요. 적 병사의 머리를 맞히면 헤드샷(피해 3배, 점수 1.5배)이고, G키로 분대원을 나를 따라오게 할지 자유롭게 움직이게 할지 바꿀 수 있어요. V키로 엎드리면 집 안이나 나무·건물 옆에서 잠복해 적에게 들키지 않고, 쏘면 잠시 발각됩니다. 집 안에서는 창문 너머로 쏘 수 있어요.</p>
+          <p><b>헬기</b> WASD로 보는 방향 기준 전후좌우 이동, Shift 상승, Z 하강(손을 떼면 고도 유지). 기수 아래 포탑이 조준선을 따라가고, 로켓은 조준선 쪽으로 2발씩 날아가요. 지형과 건물 뒤에 숨었다 튀어나와 공격하세요.</p>
           <p><b>폭격기</b> 폭탄을 들면 땅에 노란 탄착 예상 지점이 표시됩니다. 집속탄은 땅 가까이에서 작은 폭탄 12개로 터져요. 폭발은 나무와 집도 무너뜨리고, 전차는 나무를 밀고 집을 들이받아 부수며 지나갑니다.</p>
           <p><b>공통</b> 1~4 또는 휠로 무기 선택, Q/E/R 스킬 바로 사용, Tab 스킬 선택, 스페이스 선택된 스킬 사용, C 시점 거리, Esc 일시정지. 미사일은 목표를 조준선 가까이 두면 잠금됩니다. 미사일·폭탄을 다 쓰면 재장전합니다. 설정에서 자동 또는 수동을 고를 수 있고, F키(터치는 선택된 무기 칸을 한 번 더)로 언제든 직접 재장전할 수 있어요.</p>
           <p><b>터치</b> 왼쪽 화면 드래그로 이동, 오른쪽 드래그로 조준, 발사 버튼을 누르고 있기</p>
@@ -269,6 +274,11 @@ const WEAPONS={
   tank_gun:{name:'전차 주포',sub:'철갑탄 · 직사',kind:'shell',speed:680,dmg:190,blast:6,cd:3.4,grav:12,ammo:Infinity},
   mg:{name:'기관총',sub:'기관총 · 대공 가능',kind:'bullet',speed:820,dmg:5,cd:.075,spread:.02,autoAir:true,range:1000,ammo:Infinity},
   atgm:{name:'대전차미사일',sub:'미사일 · 지상/수상 잠금',kind:'missile',target:'surface',speed:180,dmg:420,blast:9,cd:3.5,ammo:6,turn:2.6,lock:2000},
+  chaingun:{name:'30mm 체인건',sub:'기관포 · 기수 포탑',kind:'bullet',speed:1000,dmg:22,cd:.1,spread:.008,range:1500,ammo:Infinity,he:true},
+  doorgun:{name:'도어건',sub:'기관총 · 측면 · 대공 가능',kind:'bullet',speed:850,dmg:8,cd:.06,spread:.014,range:1000,ammo:Infinity,autoAir:true},
+  mgpod:{name:'기관총 포드',sub:'12.7mm · 기수 방향',kind:'bullet',speed:900,dmg:9,cd:.07,spread:.01,range:1100,ammo:Infinity},
+  rocket:{name:'로켓 포드',sub:'무유도 로켓 · 2발씩',kind:'rocket',speed:260,dmg:150,blast:8,cd:.22,ammo:38,grav:2},
+  hellfire:{name:'헬파이어',sub:'미사일 · 지상/수상 잠금',kind:'missile',target:'surface',speed:320,dmg:480,blast:9,cd:1.2,ammo:8,turn:3,lock:3000},
   cannon30:{name:'30mm 기관포',sub:'기관포 · 장갑 관통 · 대공 가능',kind:'bullet',speed:1100,dmg:28,cd:.15,spread:.004,range:1800,ammo:Infinity,autoAir:true,he:true},
   cluster:{name:'집속탄',sub:'폭탄 · 넓은 범위',kind:'bomb',target:'surface',dmg:1300,blast:12,cd:1.5,ammo:4,lock:2200,cluster:true},
   autocannon:{name:'35mm 쌍열포',sub:'기관포 · 근접신관',kind:'bullet',speed:1050,dmg:14,cd:.09,spread:.01,autoAir:true,flak:true,range:1900,ammo:Infinity},
@@ -297,6 +307,7 @@ const SKILLS={
   artillery:{name:'포병 지원',cd:28,desc:'조준 지점에 포격 14발'},
   flare:{name:'플레어',cd:9,dur:3,desc:'3초간 추적 미사일 교란'},
   afterburner:{name:'애프터버너',cd:14,dur:5,desc:'5초간 속도와 선회력 증가'},
+  turbo:{name:'엔진 최대 출력',cd:14,dur:5,desc:'5초간 비행 속도 40% 증가'},
   cruise_salvo:{name:'순항미사일',cd:28,desc:'지상·수상 목표 2곳에 순항미사일'},
   medic:{name:'의무병 호출',cd:30,dur:5,desc:'5초간 체력 35% 회복, 쓰러진 분대원 1명 복귀'},
 };
@@ -335,6 +346,14 @@ const CLASSES={
       {id:'rifle',name:'소총 여단',spec:'분대원 5명 · 돌격소총 · 대전차 로켓',hp:220,speed:5.2,turn:1,scale:.35,squad:5,bars:[3,4,3]},
       {id:'sniper',name:'저격수 부대',spec:'관측수 2명 · 저격소총 · 대물 저격총 · 대공미사일',hp:150,speed:5,turn:1,scale:.35,squad:2,scope:true,weapons:['sniper','amr','smg','manpads'],bars:[2,4,5]},
       {id:'lmg',name:'기관총 분대',spec:'분대원 3명 · 경기관총 · 대전차 로켓 · 대공미사일',hp:280,speed:4.4,turn:1,scale:.35,squad:3,weapons:['lmg','grenade','rpg','manpads'],bars:[4,2,4]},
+    ]},
+  heli:{name:'헬기',desc:'낮게 정지 비행하며 기관포와 로켓, 미사일로 싸우는 회전익기. 지형 뒤에 숨었다 튀어나와 공격합니다.',domain:'air',
+    weapons:['chaingun','rocket','hellfire','aam'],skills:['flare','turbo','repair'],
+    svg:'<path d="M10 9h100v2H10z"/><path d="M58 11h4v5h-4z"/><path d="M40 16h30c6 0 10 4 10 8s-4 7-10 7H44l-6-4z"/><path d="M38 21L8 19v3l30 4z"/><path d="M8 13h4v12H8z"/><path d="M48 31h2v4h-2zM66 31h2v4h-2zM44 35h28v2H44z"/>',
+    types:[
+      {id:'attack',name:'공격헬기',spec:'10t · 293km/h · 30mm 체인건 · 로켓 · 헬파이어 8발',hp:700,speed:80,turn:1.4,ammo:{aam:2,hellfire:8,rocket:38},bars:[4,3,5]},
+      {id:'utility',name:'다목적 헬기',spec:'10t · 295km/h · 도어건 · 로켓 · 헬파이어 4발',hp:950,speed:76,turn:1.2,weapons:['doorgun','rocket','hellfire','aam'],ammo:{aam:2,hellfire:4,rocket:38},bars:[5,3,3]},
+      {id:'scout',name:'정찰헬기',spec:'1.4t · 280km/h · 기관총 포드 · 로켓',hp:400,speed:92,turn:1.8,weapons:['mgpod','rocket','aam'],ammo:{aam:2,rocket:14},bars:[2,5,3]},
     ]},
   jet:{name:'전투기',desc:'하늘을 가르며 공대공, 공대지 미사일과 폭탄을 퍼붓는 고속 기체.',domain:'air',
     weapons:['cannon','aam','agm','bomb'],skills:['flare','afterburner','cruise_salvo'],
@@ -383,7 +402,7 @@ EK.attacker={name:'적 공격기',domain:'air',hp:420,speed:150,score:400};
 EK.inf={name:'적 보병',domain:'land',hp:45,speed:6.5,score:40,soldier:true};
 for(const k of ['tank','heavytank','apc','boat','bigship','ecarrier','battery','aa'])EK[k].armored=true;
 const RELOADS={auto:{name:'자동 재장전'},manual:{name:'수동 (F키)'}};
-const DEFCOL={infantry:0x5b6346,tank:0x5f6b45,ship:0x7f8b93,carrier:0x7a868e,jet:0x8c98a2};
+const DEFCOL={heli:0x55603f,infantry:0x5b6346,tank:0x5f6b45,ship:0x7f8b93,carrier:0x7a868e,jet:0x8c98a2};
 const PAINTS={
   std:{name:'기본 도색',col:null,m:{}},
   camo:{name:'위장 녹색',col:0x4d6638,m:{acc:1.12,speed:.95}},
@@ -432,16 +451,16 @@ function shipWave(u,len,wid,dt,extra){
   u.pos.y=u.wy;u.model.position.copy(u.pos);u.model.rotation.set(u.wp,u.yaw,u.wr+(extra||0),'YXZ');
 }
 const SQUADMOVES={follow:{name:'나를 따라오기'},free:{name:'자유롭게 (적에게 직접 진격)'}};
-const FOECLS={mine:{name:'기본 (내 병과)'},random:{name:'랜덤'},ship:{name:'전투함'},carrier:{name:'항공모함'},tank:{name:'전차'},infantry:{name:'보병'},jet:{name:'전투기'}};
-const FOEVARS={ship:{corvette:'초계함',destroyer:'구축함',cruiser:'순양함',battleship:'전함'},carrier:{light:'경항모',cv:'정규 항모',cvn:'핵항모'},tank:{light:'경전차',mbt:'주력전차',heavy:'중전차',ifv:'장갑차',spaag:'자주대공포'},infantry:{rifle:'소총병',lmg:'기관총병',rpg:'대전차병',sniper:'저격병'},jet:{f16:'경전투기',f15:'제공전투기',f35:'스텔스기',a10:'공격기',bomber:'폭격기'}};
-const VK={ship:{corvette:'boat:corvette',destroyer:'boat:destroyer',cruiser:'boat:cruiser',battleship:'boat:battleship'},carrier:{light:'ecarrier:light',cv:'ecarrier:cv',cvn:'ecarrier:cvn'},tank:{light:'tank:light',mbt:'tank:mbt',heavy:'tank:heavy',ifv:'apc:ifv',spaag:'tank:spaag'},infantry:{rifle:'inf:rifle',lmg:'inf:lmg',rpg:'inf:rpg',sniper:'inf:sniper'},jet:{f16:'jet:f16',f15:'jet:f15',f35:'jet:f35',a10:'attacker:a10',bomber:'bomber:bomber'}};
-const MAINW={ship:{'boat:corvette':.35,'boat:destroyer':.35,'boat:cruiser':.2,'boat:battleship':.1},carrier:{'ecarrier:light':.14,'ecarrier:cv':.11,'ecarrier:cvn':.07,'boat:corvette':.3,'boat:destroyer':.38},tank:{'tank:light':.25,'tank:mbt':.35,'tank:heavy':.12,'apc:ifv':.18,'tank:spaag':.1},infantry:{'inf:rifle':.45,'inf:lmg':.2,'inf:rpg':.2,'inf:sniper':.15},jet:{'jet:f16':.35,'jet:f15':.25,'jet:f35':.15,'attacker:a10':.15,'bomber:bomber':.1}};
-const OTHERW={ship:{jet:.3,attacker:.15,heli:.25,battery:.3},carrier:{jet:.35,attacker:.15,heli:.25,battery:.25},tank:{heli:.35,jet:.2,attacker:.2,battery:.25},jet:{tank:.25,apc:.1,boat:.25,aa:.25,heli:.15},infantry:{tank:.2,apc:.3,heli:.25,jet:.1,attacker:.15}};
+const FOECLS={mine:{name:'기본 (내 병과)'},random:{name:'랜덤'},ship:{name:'전투함'},carrier:{name:'항공모함'},tank:{name:'전차'},infantry:{name:'보병'},heli:{name:'헬기'},jet:{name:'전투기'}};
+const FOEVARS={ship:{corvette:'초계함',destroyer:'구축함',cruiser:'순양함',battleship:'전함'},carrier:{light:'경항모',cv:'정규 항모',cvn:'핵항모'},tank:{light:'경전차',mbt:'주력전차',heavy:'중전차',ifv:'장갑차',spaag:'자주대공포'},infantry:{rifle:'소총병',lmg:'기관총병',rpg:'대전차병',sniper:'저격병'},heli:{attack:'공격헬기',utility:'다목적 헬기',scout:'정찰헬기'},jet:{f16:'경전투기',f15:'제공전투기',f35:'스텔스기',a10:'공격기',bomber:'폭격기'}};
+const VK={ship:{corvette:'boat:corvette',destroyer:'boat:destroyer',cruiser:'boat:cruiser',battleship:'boat:battleship'},carrier:{light:'ecarrier:light',cv:'ecarrier:cv',cvn:'ecarrier:cvn'},tank:{light:'tank:light',mbt:'tank:mbt',heavy:'tank:heavy',ifv:'apc:ifv',spaag:'tank:spaag'},infantry:{rifle:'inf:rifle',lmg:'inf:lmg',rpg:'inf:rpg',sniper:'inf:sniper'},heli:{attack:'heli:attack',utility:'heli:utility',scout:'heli:scout'},jet:{f16:'jet:f16',f15:'jet:f15',f35:'jet:f35',a10:'attacker:a10',bomber:'bomber:bomber'}};
+const MAINW={ship:{'boat:corvette':.35,'boat:destroyer':.35,'boat:cruiser':.2,'boat:battleship':.1},carrier:{'ecarrier:light':.14,'ecarrier:cv':.11,'ecarrier:cvn':.07,'boat:corvette':.3,'boat:destroyer':.38},tank:{'tank:light':.25,'tank:mbt':.35,'tank:heavy':.12,'apc:ifv':.18,'tank:spaag':.1},infantry:{'inf:rifle':.45,'inf:lmg':.2,'inf:rpg':.2,'inf:sniper':.15},heli:{'heli:attack':.5,'heli:utility':.25,'heli:scout':.25},jet:{'jet:f16':.35,'jet:f15':.25,'jet:f35':.15,'attacker:a10':.15,'bomber:bomber':.1}};
+const OTHERW={ship:{jet:.3,attacker:.15,heli:.25,battery:.3},carrier:{jet:.35,attacker:.15,heli:.25,battery:.25},tank:{heli:.35,jet:.2,attacker:.2,battery:.25},jet:{tank:.25,apc:.1,boat:.25,aa:.25,heli:.15},infantry:{tank:.2,apc:.3,heli:.25,jet:.1,attacker:.15},heli:{tank:.25,apc:.2,inf:.15,aa:.15,jet:.15,boat:.1}};
 const EV={
-  'boat:corvette':{name:'적 초계함',hp:300,len:30,tur:1,bar:1,speed:17,score:100,gdmg:40},
-  'boat:destroyer':{name:'적 구축함',hp:550,len:46,tur:2,bar:1,speed:15,score:180,gdmg:50},
-  'boat:cruiser':{name:'적 순양함',hp:900,len:62,tur:2,bar:2,speed:13,score:300,gdmg:60},
-  'boat:battleship':{name:'적 전함',hp:1600,len:88,tur:3,bar:3,speed:10,score:600,gdmg:100},
+  'boat:corvette':{name:'적 초계함',hp:300,len:30,tur:1,bar:1,speed:17,score:100,gdmg:30},
+  'boat:destroyer':{name:'적 구축함',hp:550,len:46,tur:2,bar:1,speed:15,score:180,gdmg:38},
+  'boat:cruiser':{name:'적 순양함',hp:900,len:62,tur:2,bar:2,speed:13,score:300,gdmg:46},
+  'boat:battleship':{name:'적 전함',hp:1600,len:88,tur:3,bar:3,speed:10,score:600,gdmg:72},
   'ecarrier:light':{name:'적 경항모',hp:1200,len:70,launch:3,speed:10,score:700},
   'ecarrier:cv':{name:'적 항공모함',hp:1600,len:84,launch:4,speed:9,score:900},
   'ecarrier:cvn':{name:'적 핵항모',hp:2300,len:104,launch:6,speed:8,score:1300},
@@ -458,6 +477,9 @@ const EV={
   'jet:f15':{name:'적 제공전투기',hp:200,speed:190,model:'f15',score:200},
   'jet:f35':{name:'적 스텔스기',hp:170,speed:170,model:'f35',stealth:true,score:250},
   'attacker:a10':{name:'적 공격기'},
+  'heli:attack':{name:'적 공격헬기',model:'attack'},
+  'heli:utility':{name:'적 다목적 헬기',hp:280,speed:42,model:'utility',score:150},
+  'heli:scout':{name:'적 정찰헬기',hp:120,speed:55,model:'scout',score:110},
   'bomber:bomber':{name:'적 폭격기',hp:800,scale:1.8,score:600,boss:false},
 };
 const S={cls:'ship',type:1,terrain:'coast',time:'day',size:'normal',diff:'normal',reload:'auto',paint:'std',wave:'normal',squadMode:'squad',squadMove:'follow',foeCls:'mine',foeVar:'random',seed:(Math.random()*1e6)|0};
@@ -567,31 +589,184 @@ function at(m,x,y,z){m.position.set(x,y,z);return m;}
 function obj(x,y,z){const o=new THREE.Object3D();o.position.set(x,y,z);return o;}
 
 // ================= MODELS =================
+// ---------- 모델 도우미: 평면도 압출(날개·포탑), 측면도 압출(꼬리날개·차체), 회전체(동체) ----------
+const sym=p=>p.concat(p.slice(1,-1).reverse().map(([x,z])=>[-x,z]));
+function planformMesh(pts,th,c){const sh=new THREE.Shape();sh.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)sh.lineTo(pts[i][0],pts[i][1]);sh.closePath();const g=new THREE.ExtrudeGeometry(sh,{depth:th,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,th/2,0);return new THREE.Mesh(g,M(c));}
+function sideMesh(pts,w,c){const sh=new THREE.Shape();sh.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)sh.lineTo(pts[i][0],pts[i][1]);sh.closePath();const g=new THREE.ExtrudeGeometry(sh,{depth:w,bevelEnabled:false});g.rotateY(-Math.PI/2);g.translate(w/2,0,0);return new THREE.Mesh(g,M(c));}
+function lathe(prof,seg,c){const g=new THREE.LatheGeometry(prof.map(([r,z])=>new THREE.Vector2(Math.max(r,.0001),z)),seg||10);g.rotateX(Math.PI/2);return new THREE.Mesh(g,M(c));}
+function missileMesh(x,y,z,L,col){const m=new THREE.Group();const c=col||0xdedfd8;const b=cyl(.11,.11,L,c,6);b.rotation.x=Math.PI/2;m.add(b);const n=new THREE.Mesh(new THREE.ConeGeometry(.11,.38,6),M(c));n.rotation.x=Math.PI/2;n.position.z=L/2+.19;m.add(n);
+  for(let k=0;k<4;k++){const a=k*Math.PI/2,f=box(.02,.3,.32,0x8d8f88);f.position.set(Math.sin(a)*.15,Math.cos(a)*.15,-L/2+.2);f.rotation.z=-a;m.add(f);}m.position.set(x,y,z);return m;}
+
+// ---------- 전차 (실제 형상: 경사 장갑 차체, 사이드 스커트, 각진 포탑, 배연기·포방패·큐폴라·연막탄 발사기) ----------
 function makeTank(c,kind,s){
-  s=s||1;const g=new THREE.Group(),dk=0x2a2b25;
-  g.add(at(box(3.4*s,1.1*s,7.2*s,c),0,1.15*s,0));
-  g.add(at(box(1*s,1.15*s,7.8*s,dk),1.75*s,.62*s,0));
-  g.add(at(box(1*s,1.15*s,7.8*s,dk),-1.75*s,.62*s,0));
-  const fr=box(3.4*s,.7*s,1.5*s,c);fr.position.set(0,1.25*s,3.9*s);fr.rotation.x=.55;g.add(fr);
-  const tur=new THREE.Group();tur.position.set(0,2.15*s,-.3*s);g.add(tur);
-  tur.add(box(2.8*s,.95*s,3.6*s,c));
-  tur.add(at(box(.9*s,.35*s,.8*s,dk),.6*s,.62*s,-.8*s));
-  tur.add(at(box(2.4*s,.6*s,1*s,c),0,0,-2.1*s));
-  const pit=new THREE.Group();pit.position.set(0,.05*s,1.7*s);tur.add(pit);
-  const muzzles=[];
-  if(kind==='spaag'||kind==='aa'){
-    for(const sx of [-1.6,1.6]){const b=cyl(.09*s,.1*s,4*s,dk,6);b.rotation.x=Math.PI/2;b.position.set(sx*s,0,2*s);pit.add(b);const mz=obj(sx*s,0,4*s);pit.add(mz);muzzles.push(mz);}
-    const r=box(1.8*s,1*s,.15*s,dk);r.position.set(0,1.4*s,-1.3*s);tur.add(r);
-  }else{
-    const L=(kind==='heavy'?6.6:kind==='light'?4.6:5.7)*s;
-    const b=cyl(.16*s,.21*s,L,dk,8);b.rotation.x=Math.PI/2;b.position.z=L/2;pit.add(b);
-    const mb=cyl(.27*s,.27*s,.8*s,dk,8);mb.rotation.x=Math.PI/2;mb.position.z=L-.4*s;pit.add(mb);
-    const mz=obj(0,0,L);pit.add(mz);muzzles.push(mz);
+  s=s||1;const g=new THREE.Group(),dk=0x2a2b25,dk2=0x1b1c18,lt=new THREE.Color(c).multiplyScalar(.86).getHex();
+  const heavy=kind==='heavy',light=kind==='light',aa=kind==='spaag';
+  const HL=heavy?8.2:light?6.6:7.6,HW=3.5,S_=v=>v*s,fz=HL/2,rz=-HL/2;
+  g.add(at(box(S_(2.3),S_(.75),S_(HL-.5),dk),0,S_(.78),0));
+  const links=[],wheels=[];
+  for(const sx of [-1,1]){
+    const tx=sx*S_(1.35);
+    g.add(at(box(S_(.72),S_(.16),S_(HL-.3),dk2),tx,S_(1.1),0));
+    const nW=light?5:heavy?7:6;
+    for(let i=0;i<nW;i++){const wz=S_(-HL/2+1+i*(HL-2)/(nW-1));const wh=cyl(S_(.37),S_(.37),S_(.62),0x3a3b34,12);wh.rotation.z=Math.PI/2;wh.position.set(tx,S_(.42),wz);wh.add(box(S_(.5),S_(.64),S_(.1),0x5a5c54));g.add(wh);wheels.push(wh);}
+    for(const [zz,yy,r] of [[rz+.3,.66,.44],[fz-.3,.62,.38]]){const sp=cyl(S_(r),S_(r),S_(.6),0x2f302a,10);sp.rotation.z=Math.PI/2;sp.position.set(tx,S_(yy),S_(zz));sp.add(box(S_(r*1.7),S_(.62),S_(.12),0x5a5c54));g.add(sp);wheels.push(sp);}
+    for(let i=0;i<18;i++){const l=box(S_(.74),S_(.08),S_(.22),dk2);l.position.set(tx,S_(.05),0);g.add(l);links.push({m:l,o:i/18});}
+    const sk=box(S_(.08),S_(.52),S_(HL-.9),c);sk.position.set(sx*S_(1.74),S_(1.0),S_(.15));g.add(sk);
   }
-  const links=[];for(const sx of [-1,1])for(let i=0;i<14;i++){const l=box(1.02*s,.07*s,.26*s,0x1b1c18);l.position.set(sx*1.75*s,1.22*s,0);g.add(l);links.push({m:l,o:i/14});}
-  const wheels=[];for(const sx of [-1,1])for(let i=0;i<6;i++){const wh=cyl(.42*s,.42*s,.1*s,0x34352f,10);wh.rotation.z=Math.PI/2;wh.position.set(sx*2.27*s,.55*s,(-2.9+i*1.16)*s);const hub=box(.62*s,.05*s,.12*s,0x5d5f56);hub.position.y=-sx*.06*s;wh.add(hub);g.add(wh);wheels.push(wh);}
-  return {g,turrets:[{tur,pit,muzzles}],launcher:obj(1.6*s,.6*s,0),links,wheels,wheelR:.42*s,trackL:7.8*s};
+  g.add(sideMesh([[rz,.9],[fz-1,.72],[fz,1.05],[fz-2.1,1.56],[rz+.3,1.62],[rz,1.42]].map(([z,y])=>[S_(z),S_(y)]),S_(HW),c));
+  for(let i=0;i<5;i++)g.add(at(box(S_(2.2),S_(.03),S_(.12),dk),0,S_(1.635),S_(rz+.7+i*.32)));
+  for(const sx of [-1,1])g.add(at(box(S_(.28),S_(.18),S_(.12),0xd8d2b0),sx*S_(1.35),S_(1.2),S_(fz-.35)));
+  const tur=new THREE.Group();tur.position.set(0,S_(1.62),S_(heavy?-.5:-.3));g.add(tur);
+  let pit,muzzles=[],radar=null;
+  if(aa){
+    tur.add(at(box(S_(2.3),S_(1.25),S_(2.7),c),0,S_(.62),0));
+    tur.add(at(box(S_(2.0),S_(.2),S_(2.3),lt),0,S_(1.32),0));
+    radar=new THREE.Group();radar.position.set(0,S_(1.45),S_(-1));tur.add(radar);radar.add(cyl(S_(.06),S_(.06),S_(.5),dk,6));radar.add(at(box(S_(1.7),S_(.55),S_(.1),dk),0,S_(.45),0));
+    const dish=new THREE.Mesh(new THREE.SphereGeometry(S_(.4),8,6,0,Math.PI*2,0,Math.PI/2),M(dk));dish.rotation.x=Math.PI/2;dish.position.set(0,S_(.95),S_(1.4));tur.add(dish);
+    pit=new THREE.Group();pit.position.set(0,S_(.7),S_(.3));tur.add(pit);
+    for(const sx of [-1,1]){pit.add(at(box(S_(.4),S_(.5),S_(1.5),lt),sx*S_(1.38),0,S_(.2)));const b=cyl(S_(.07),S_(.09),S_(3.2),dk,6);b.rotation.x=Math.PI/2;b.position.set(sx*S_(1.38),0,S_(2.4));pit.add(b);const mz=obj(sx*S_(1.38),0,S_(4));pit.add(mz);muzzles.push(mz);}
+  }else{
+    const TL=heavy?1.15:light?.85:1,th=S_((light?.7:.85)*TL);
+    const tb=planformMesh(sym([[0,2.3],[1.05,1.7],[1.7,.6],[1.75,-1.3],[1.45,-2.5],[0,-2.5]]).map(([x,z])=>[S_(x*TL),S_(z*TL)]),th,c);tb.position.y=th/2;tur.add(tb);
+    const tb2=planformMesh(sym([[0,1.9],[.9,1.4],[1.45,.5],[1.5,-1.2],[1.25,-2.3],[0,-2.3]]).map(([x,z])=>[S_(x*TL),S_(z*TL)]),S_(.12),lt);tb2.position.y=th+S_(.06);tur.add(tb2);
+    tur.add(at(box(S_(2.6*TL),S_(.32),S_(.6),dk),0,S_(.45),S_(-2.75*TL)));
+    const cup=cyl(S_(.32),S_(.36),S_(.35),lt,8);cup.position.set(S_(.75*TL),th+S_(.25),S_(-.7));tur.add(cup);
+    const mg=cyl(S_(.035),S_(.035),S_(1),dk,5);mg.rotation.x=Math.PI/2;mg.position.set(S_(.75*TL),th+S_(.55),S_(-.3));tur.add(mg);
+    tur.add(at(cyl(S_(.3),S_(.3),S_(.08),lt,8),S_(-.7*TL),th+S_(.1),S_(-.6)));
+    tur.add(at(box(S_(.45),S_(.35),S_(.5),lt),S_(-.9*TL),th+S_(.15),S_(.9*TL)));
+    for(const sx of [-1,1]){for(let k=0;k<3;k++){const sd=cyl(S_(.06),S_(.06),S_(.3),dk,5);sd.rotation.x=1.2;sd.position.set(sx*S_((1.25+k*.12)*TL),th-S_(.08),S_((1.05-k*.25)*TL));tur.add(sd);}
+      const an=cyl(S_(.012),S_(.012),S_(2.2),dk,3);an.position.set(sx*S_(1.2*TL),th+S_(1.1),S_(-2.2*TL));tur.add(an);}
+    pit=new THREE.Group();pit.position.set(0,S_(.42*TL),S_(2.05*TL));tur.add(pit);
+    pit.add(at(box(S_(.8),S_(.58),S_(.55),lt),0,0,S_(.12)));
+    const L=S_(heavy?6.8:light?4.8:5.8);
+    const br=cyl(S_(.13),S_(.17),L,dk,10);br.rotation.x=Math.PI/2;br.position.z=L/2+S_(.3);pit.add(br);
+    const fe=cyl(S_(.22),S_(.22),S_(.9),dk,10);fe.rotation.x=Math.PI/2;fe.position.z=L*.55;pit.add(fe);
+    if(light){const mb=cyl(S_(.21),S_(.17),S_(.5),dk,8);mb.rotation.x=Math.PI/2;mb.position.z=L+S_(.1);pit.add(mb);}
+    const mz=obj(0,0,L+S_(.4));pit.add(mz);muzzles.push(mz);
+  }
+  return {g,turrets:[{tur,pit,muzzles,radar}],launcher:obj(S_(1.6),S_(.6),0),links,linkDir:-1,wheels,wheelR:S_(.37),trackL:S_(HL-.3)};
 }
+
+// ---------- 고정익기 (실제 형상: 기종별 평면도·꼬리날개·흡입구·엔진) ----------
+function makeJet(c,kind,s){
+  s=s||1;const g=new THREE.Group(),dk=0x2c3136,glass=0x1d2c3a,lt=new THREE.Color(c).multiplyScalar(.82).getHex();
+  const glowMat=new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.85,depthWrite:false});
+  const glow=new THREE.Group();const addGlow=(x,y,r)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r*.3,r*4.8,8),glowMat);m.rotation.x=-Math.PI/2;m.position.set(x,y,0);glow.add(m);};
+  const canopy=(z,y,sx,sz,col)=>{const cn=new THREE.Mesh(new THREE.SphereGeometry(.55,10,8),M(col||glass));cn.scale.set(sx||1,.85,sz||2.4);cn.position.set(0,y,z);g.add(cn);};
+  const nozzle=(x,y,z,r)=>{const nz=cyl(r*.85,r,1.1,dk,10);nz.rotation.x=Math.PI/2;nz.position.set(x,y,z);g.add(nz);};
+  let muzzle=obj(.8,.45,3),pylons=[obj(2.6,-.6,-1),obj(-2.6,-.6,-1)];
+  if(kind==='f15'){
+    g.add(lathe([[.4,-8.4],[.9,-8],[1.05,-4],[1.05,0],[.95,2.5],[.7,4.6],[.42,6.4],[.18,7.6],[0,8.3]],10,c));
+    for(const sx of [-1,1]){g.add(at(box(1,1.15,5.2,lt),sx*1.25,-.15,1.4));g.add(at(box(.9,1,.2,0x111214),sx*1.25,-.12,4.02));const en=cyl(.62,.66,6,lt,10);en.rotation.x=Math.PI/2;en.position.set(sx*.72,-.05,-5.2);g.add(en);nozzle(sx*.72,-.05,-8.6,.6);}
+    canopy(4.3,.78,1,2.4);
+    g.add(at(planformMesh(sym([[0,2.6],[1.6,1.2],[6.8,-3.6],[6.8,-4.7],[1.6,-5],[0,-5]]),.22,c),0,.25,0));
+    g.add(at(planformMesh(sym([[0,-6.7],[1.5,-6.6],[4.2,-7.9],[4.2,-8.9],[1.5,-8.9],[0,-8.9]]),.14,c),0,.05,0));
+    for(const sx of [-1,1]){const f=sideMesh([[-4.9,.7],[-7,4.2],[-8.1,4.2],[-8.1,.7]],.16,c);f.position.x=sx*1.35;f.rotation.z=-sx*.1;g.add(f);
+      g.add(missileMesh(sx*1.45,-.85,-1,3.6));g.add(at(box(.12,.4,1.3,dk),sx*3.4,-.1,-2.3));g.add(missileMesh(sx*3.4,-.42,-2.1,3));g.add(missileMesh(sx*6.85,.2,-3.6,2.6));}
+    addGlow(-.72,-.05,.42);addGlow(.72,-.05,.42);glow.position.z=-9.6;
+    muzzle=obj(1.4,.55,2.6);pylons=[obj(3.4,-.5,-1.5),obj(-3.4,-.5,-1.5)];
+  }else if(kind==='f35'){
+    g.add(lathe([[.6,-6.9],[.95,-6.4],[1.15,-3.5],[1.15,0],[1,2.4],[.72,4.1],[.42,5.6],[.15,6.6],[0,7.1]],6,c));
+    for(const sx of [-1,1]){const it=box(.7,.9,2.3,lt);it.position.set(sx*1.15,.05,1.9);it.rotation.z=sx*.15;g.add(it);g.add(at(box(.6,.8,.15,0x111214),sx*1.15,.05,3.08));
+      const f=sideMesh([[-4.3,.7],[-5.9,2.9],[-6.9,2.9],[-6.6,.7]],.14,c);f.position.x=sx*1.15;f.rotation.z=-sx*.42;g.add(f);}
+    canopy(3.5,.8,1,2.2,0x3a3520);
+    g.add(at(planformMesh(sym([[0,2],[1.1,1.3],[5.3,-3],[5.3,-3.9],[1.2,-4.6],[0,-4.6]]),.22,c),0,.1,0));
+    g.add(at(planformMesh(sym([[0,-5.2],[1.1,-5.2],[3.5,-6.6],[3.5,-7.5],[1.1,-7.4],[0,-7.4]]),.14,c),0,.05,0));
+    nozzle(0,0,-7.3,.62);addGlow(0,0,.48);glow.position.z=-8.2;
+    muzzle=obj(.9,.5,2.4);pylons=[obj(1.2,-.75,-.5),obj(-1.2,-.75,-.5)];
+  }else if(kind==='a10'){
+    g.add(lathe([[.35,-7.6],[.7,-6.5],[.85,-3],[.9,1],[.85,3.5],[.7,5],[.5,5.9],[0,6.4]],10,c));
+    const gb=cyl(.07,.07,1.2,dk,6);gb.rotation.x=Math.PI/2;gb.position.set(0,-.35,6.7);g.add(gb);
+    canopy(4,.78,1,1.9);
+    g.add(at(planformMesh(sym([[0,1.6],[1,1.6],[8.6,1.1],[8.8,.6],[8.8,-.9],[1,-1.2],[0,-1.2]]),.28,c),0,-.35,0));
+    for(const sx of [-1,1]){const pod=cyl(.62,.62,3.2,lt,10);pod.rotation.x=Math.PI/2;pod.position.set(sx*1.35,1.15,-3.2);g.add(pod);g.add(at(box(.3,.5,1.3,lt),sx*.85,.85,-3.2));
+      const ring=cyl(.5,.5,.08,0x111214,10);ring.rotation.x=Math.PI/2;ring.position.set(sx*1.35,1.15,-1.58);g.add(ring);
+      const f=sideMesh([[-4.4,-.7],[-4.6,2],[-6.1,2],[-6,-.7]],.14,c);f.position.set(sx*3.6,.4,0);g.add(f);
+      for(const px of [2.6,4.4,6.2]){g.add(at(box(.1,.3,1,dk),sx*px,-.65,-.2));g.add(missileMesh(sx*px,-.95,0,2.4,px>5?0x9a9c90:0x5a5e52));}}
+    g.add(at(planformMesh(sym([[0,-4.6],[3.6,-4.6],[3.6,-5.9],[0,-5.9]]),.16,c),0,.4,0));
+    addGlow(-1.35,1.15,.45);addGlow(1.35,1.15,.45);glow.position.z=-5.2;
+    muzzle=obj(0,-.35,7.3);pylons=[obj(2.6,-.95,0),obj(-2.6,-.95,0)];
+  }else if(kind==='bomber'){
+    const b=new THREE.Group();b.scale.setScalar(.55);g.add(b);
+    b.add(lathe([[.6,-14],[1,-12],[1.4,-6],[1.45,2],[1.35,8],[1.1,11],[.7,12.8],[0,13.6]],10,c));
+    b.add(at(box(1.6,.5,1.4,glass),0,.95,11.6));
+    b.add(at(planformMesh(sym([[0,4.5],[1.4,4.3],[14,-5.2],[14.2,-6.4],[1.4,-2.2],[0,-2.2]]),.35,c),0,1.1,0));
+    for(const sx of [-1,1])for(const xp of [4.6,8.8]){const z0=4.3-(xp-1.4)*(9.5/12.6)-1.4;b.add(at(box(.25,.8,1.6,lt),sx*xp,.55,z0));
+      for(const dx of [-.55,.55]){const pod=cyl(.42,.42,3.2,lt,8);pod.rotation.x=Math.PI/2;pod.position.set(sx*xp+dx,0,z0-.3);b.add(pod);const rg=cyl(.32,.32,.06,0x111214,8);rg.rotation.x=Math.PI/2;rg.position.set(sx*xp+dx,0,z0+1.32);b.add(rg);}}
+    b.add(sideMesh([[-9.5,1.2],[-12.6,7.5],[-14.6,7.5],[-14.4,1.2]],.3,c));
+    b.add(at(planformMesh(sym([[0,-11.2],[1,-11.2],[6.2,-13.3],[6.2,-14.3],[1,-14.3],[0,-14.3]]),.2,c),0,.6,0));
+    for(const sx of [-1,1])b.add(at(box(.2,.9,.5,dk),sx*12,.5,-4.5));
+    muzzle=obj(0,0,-8);pylons=[obj(3,-.6,0),obj(-3,-.6,0)];
+  }else{ // f16
+    g.add(lathe([[.5,-7.7],[.72,-7.1],[.82,-5],[.86,-1],[.82,2],[.66,4.4],[.42,6.1],[.18,7.2],[0,7.9]],10,c));
+    g.add(at(box(1,.62,2.8,lt),0,-.72,2.2));g.add(at(box(.9,.5,.15,0x111214),0,-.72,3.63));
+    canopy(3.9,.62,1,2.6);
+    g.add(planformMesh(sym([[0,4.6],[.95,1.6],[4.9,-2.3],[4.9,-3.2],[.9,-3.7],[0,-3.7]]),.2,c));
+    g.add(planformMesh(sym([[0,-5.5],[.7,-5.6],[3.1,-7.1],[3.1,-7.9],[.7,-7.9],[0,-7.9]]),.14,c));
+    g.add(sideMesh([[-4.4,.6],[-6.7,3.7],[-7.7,3.7],[-7.9,.6]],.18,c));
+    for(const sx of [-1,1]){const vf=sideMesh([[-6,-.5],[-6.7,-1.1],[-7.3,-1.1],[-7.2,-.5]],.08,c);vf.position.x=sx*.55;vf.rotation.z=sx*.3;g.add(vf);
+      g.add(missileMesh(sx*4.95,-.05,-2.4,2.6));g.add(at(box(.12,.35,1.2,dk),sx*2.6,-.3,-1.8));g.add(missileMesh(sx*2.6,-.6,-1.6,3));}
+    nozzle(0,0,-8.1,.6);addGlow(0,0,.45);glow.position.z=-9;
+    muzzle=obj(.8,.45,3);pylons=[obj(2.6,-.65,-1),obj(-2.6,-.65,-1)];
+  }
+  g.add(glow);pylons.forEach(p=>g.add(p));g.add(muzzle);
+  g.scale.setScalar(s);
+  return {g,glow,muzzle,pylons};
+}
+
+// ---------- 헬기 (공격헬기·다목적·정찰) ----------
+function makeHeli(c,kind,s){
+  kind=kind||'attack';s=s||1;const g=new THREE.Group(),dk=0x2c2d27,glass=0x1d2c3a,lt=new THREE.Color(c).multiplyScalar(.85).getHex();
+  const tur=new THREE.Group(),pit=new THREE.Group();tur.add(pit);const muzzles=[];let pylons=[],rotorY=1.8,rotorR=7.2,boomEnd=-8;
+  if(kind==='utility'){
+    g.add(at(box(2,1.75,4.4,c),0,.1,.3));
+    g.add(lathe([[1,2.4],[.95,3.1],[.7,3.7],[.3,4.1],[0,4.25]],8,c));
+    g.add(at(box(1.8,.7,.9,glass),0,.55,2.75));
+    for(const sx of [-1,1])g.add(at(box(.04,.75,1.3,glass),sx*1.01,.35,.6));
+    g.add(at(planformMesh(sym([[0,.5],[2.2,.3],[2.2,-.5],[0,-.7]]),.1,c),0,.45,-.6));
+    g.add(at(box(1.2,.55,1.8,lt),0,1.2,0));
+    const boom=cyl(.45,.22,6.2,c,8);boom.rotation.x=Math.PI/2;boom.position.set(0,.55,-4.9);g.add(boom);
+    g.add(sideMesh([[-7.4,.4],[-7.8,2.6],[-8.5,2.6],[-8.3,.4]],.14,c));
+    g.add(at(box(2.6,.06,.7,c),0,.55,-7.6));
+    for(const sx of [-1,1]){g.add(at(box(.08,.6,.08,dk),sx*.9,-.95,1.6));const wh=cyl(.3,.3,.2,dk,8);wh.rotation.z=Math.PI/2;wh.position.set(sx*.9,-1.25,1.6);g.add(wh);}
+    for(const sx of [-1,1]){const rp=cyl(.28,.28,1.5,dk,8);rp.rotation.x=Math.PI/2;rp.position.set(sx*2,.25,-.6);g.add(rp);const py=obj(sx*2,.25,.2);g.add(py);pylons.push(py);}
+    tur.position.set(1.05,.25,1.0);g.add(tur);
+    const b=cyl(.04,.04,1.1,dk,5);b.rotation.x=Math.PI/2;b.position.z=.55;pit.add(b);const mz=obj(0,0,1.1);pit.add(mz);muzzles.push(mz);
+    rotorY=1.75;rotorR=8.2;boomEnd=-8.1;
+  }else if(kind==='scout'){
+    const body=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),M(c));body.scale.set(.85,.9,1.4);g.add(body);
+    const gl=new THREE.Mesh(new THREE.SphereGeometry(.9,10,8,0,Math.PI*2,0,Math.PI/2),M(glass));gl.rotation.x=Math.PI/2.4;gl.scale.set(.86,.9,1);gl.position.set(0,.15,.55);g.add(gl);
+    const boom=cyl(.18,.1,4.4,c,6);boom.rotation.x=Math.PI/2;boom.position.set(0,.25,-3.4);g.add(boom);
+    g.add(sideMesh([[-5.2,.1],[-5.5,1.4],[-5.9,1.4],[-5.8,.1]],.1,c));g.add(at(box(1.6,.05,.4,c),0,.3,-5.2));
+    for(const sx of [-1,1]){g.add(at(box(.08,.08,3.2,dk),sx*.8,-1.15,.1));g.add(at(box(.06,.55,.06,dk),sx*.7,-.85,.9));g.add(at(box(.06,.55,.06,dk),sx*.7,-.85,-.6));
+      g.add(at(box(.9,.08,.25,dk),sx*.85,-.25,0));const pod=cyl(.22,.22,1.2,dk,8);pod.rotation.x=Math.PI/2;pod.position.set(sx*1.3,-.3,.1);g.add(pod);const py=obj(sx*1.3,-.3,.8);g.add(py);pylons.push(py);}
+    g.add(at(new THREE.Mesh(new THREE.SphereGeometry(.28,8,6),M(dk)),0,2.05,0));
+    tur.position.set(.9,-.3,.4);g.add(tur);const mz=obj(0,0,1);pit.add(mz);muzzles.push(mz);
+    rotorY=1.45;rotorR=4.4;boomEnd=-5.7;
+  }else{ // attack
+    g.add(at(box(1.15,1.35,4.2,c),0,0,.4));
+    g.add(lathe([[.58,2.4],[.55,3.1],[.38,3.7],[0,4.1]],8,c));
+    g.add(at(box(.85,.55,1.1,glass),0,.85,2.3));g.add(at(box(.85,.62,1.2,glass),0,1.05,1.05));
+    for(const sx of [-1,1]){const en=cyl(.38,.38,1.9,lt,8);en.rotation.x=Math.PI/2;en.position.set(sx*.82,.82,-.3);g.add(en);g.add(at(box(.3,.3,.4,dk),sx*.82,.82,-1.4));}
+    g.add(at(planformMesh(sym([[0,.6],[2.3,.35],[2.3,-.6],[0,-.85]]),.12,c),0,.05,-.15));
+    for(const sx of [-1,1]){g.add(at(box(.1,.4,.5,dk),sx*1.35,-.25,-.1));const rp=cyl(.3,.3,1.6,dk,8);rp.rotation.x=Math.PI/2;rp.position.set(sx*1.35,-.55,0);g.add(rp);const py=obj(sx*1.35,-.55,.8);g.add(py);pylons.push(py);
+      for(const dy of [-.35,-.75])g.add(missileMesh(sx*2.15,dy,.05,1.6,0x55584a));
+      g.add(at(box(.08,.75,.08,dk),sx*.75,-.95,1.3));const wh=cyl(.3,.3,.2,dk,8);wh.rotation.z=Math.PI/2;wh.position.set(sx*.75,-1.3,1.3);g.add(wh);}
+    const boom=cyl(.42,.2,5.9,c,8);boom.rotation.x=Math.PI/2;boom.position.set(0,.35,-4.6);g.add(boom);
+    g.add(sideMesh([[-7,.3],[-7.4,2.2],[-8,2.2],[-7.9,.3]],.12,c));g.add(at(box(2.2,.06,.6,c),0,.4,-7.3));
+    tur.position.set(0,-.78,2.6);g.add(tur);tur.add(at(new THREE.Mesh(new THREE.SphereGeometry(.28,8,6),M(dk)),0,0,0));
+    const b=cyl(.05,.06,1.5,dk,6);b.rotation.x=Math.PI/2;b.position.z=.75;pit.add(b);const mz=obj(0,0,1.5);pit.add(mz);muzzles.push(mz);
+    rotorY=1.8;rotorR=7.2;boomEnd=-7.7;
+  }
+  g.add(at(cyl(.12,.16,rotorY-.9,dk,6),0,(rotorY+.9)/2-.1,.2));
+  const rotor=new THREE.Group();rotor.position.set(0,rotorY,.2);g.add(rotor);
+  const bl=kind==='scout'?2:2;for(let k=0;k<bl;k++){const blade=box(rotorR*2,.05,.42,dk);blade.rotation.y=k*Math.PI/2;rotor.add(blade);}rotor.add(cyl(.32,.32,.25,dk,8));
+  const tailRotor=new THREE.Group();tailRotor.position.set(kind==='utility'?-.25:.25,kind==='scout'?.9:1.5,boomEnd);g.add(tailRotor);
+  for(let k=0;k<2;k++){const tb=box(.05,kind==='scout'?1.6:2.4,.22,dk);tb.rotation.x=k*Math.PI/2;tailRotor.add(tb);}
+  g.scale.setScalar(s);
+  return {g,rotor,tailRotor,muzzle:muzzles[0],turrets:[{tur,pit,muzzles}],pylons};
+}
+
 function makeAPC(c,s){
   s=s||1;const g=new THREE.Group(),dk=0x2a2b25;
   g.add(at(box(3*s,1.5*s,7.4*s,c),0,1.55*s,0));
@@ -608,8 +783,8 @@ function makeAPC(c,s){
   const mz=obj(0,0,L);pit.add(mz);
   return {g,turrets:[{tur,pit,muzzles:[mz]}],launcher:obj(-.75*s,.6*s,0),wheels,wheelR:.62*s};
 }
-function animTracks(P,d){P.toff=(P.toff||0)+d;if(P.links)for(const l of P.links){const f=((l.o+P.toff/P.trackL)%1+1)%1;l.m.position.z=(f-.5)*P.trackL;}if(P.wheels)for(const w of P.wheels)w.rotation.x+=d/P.wheelR;}
-function recoilT(t,dt){if(t.pit.userData.z0==null)t.pit.userData.z0=t.pit.position.z;t.recoil=Math.max(0,(t.recoil||0)-dt*2.5);t.pit.position.z=t.pit.userData.z0-t.recoil*t.recoil*(t.rlen||.6);}
+function animTracks(P,d){P.toff=(P.toff||0)+d;if(P.links)for(const l of P.links){const f=((l.o+(P.linkDir||1)*P.toff/P.trackL)%1+1)%1;l.m.position.z=(f-.5)*P.trackL;}if(P.wheels)for(const w of P.wheels)w.rotation.x+=d/P.wheelR;}
+function recoilT(t,dt){if(t.radar)t.radar.rotation.y+=dt*2.5;if(t.pit.userData.z0==null)t.pit.userData.z0=t.pit.position.z;t.recoil=Math.max(0,(t.recoil||0)-dt*2.5);t.pit.position.z=t.pit.userData.z0-t.recoil*t.recoil*(t.rlen||.6);}
 function makeSoldier(c,kind){
   const g=new THREE.Group(),skin=0xc99f80,dk=0x26271f,vest=new THREE.Color(c).multiplyScalar(.72).getHex();
   g.rotation.order='YXZ';
@@ -704,38 +879,6 @@ function makeShip(len,nTur,c,o){
   const vls=obj(0,dy+1,len*.16);g.add(vls);
   return {g,turrets,ciws,vls,deckY:dy,len,w,H};
 }
-function makeJet(c,kind,s){
-  s=s||1;const g=new THREE.Group(),dk=0x2c3136,glass=0x1d2c3a;
-  const fl=kind==='a10'?10:11;
-  const fus=cyl(.72,.86,fl,c,8);fus.rotation.x=Math.PI/2;g.add(fus);
-  const nose=new THREE.Mesh(new THREE.ConeGeometry(.72,3.2,8),M(c));nose.rotation.x=Math.PI/2;nose.position.z=fl/2+1.6;g.add(nose);
-  const can=new THREE.Mesh(new THREE.SphereGeometry(.62,8,6),M(glass));can.scale.set(1,.8,2.2);can.position.set(0,.66,fl/2-1.1);g.add(can);
-  if(kind==='a10'){
-    g.add(at(box(17,.3,2.6,c),0,-.1,.6));
-    for(const sx of [-1.5,1.5]){const p=cyl(.65,.65,3,dk,8);p.rotation.x=Math.PI/2;p.position.set(sx,1.15,-2.8);g.add(p);}
-    g.add(at(box(7,.2,1.6,c),0,.7,-5.2));
-    for(const sx of [-3.4,3.4])g.add(at(box(.18,2.4,1.6,c),sx,1.5,-5.2));
-  }else{
-    const span=kind==='bomber'?9.5:kind==='f15'?6.6:6.2;
-    const ws=new THREE.Shape();ws.moveTo(0,2.4);ws.lineTo(span,-2.6);ws.lineTo(span,-3.6);ws.lineTo(-span,-3.6);ws.lineTo(-span,-2.6);ws.closePath();
-    const wg=new THREE.ExtrudeGeometry(ws,{depth:.22,bevelEnabled:false});wg.rotateX(Math.PI/2);wg.translate(0,.08,-.4);
-    g.add(new THREE.Mesh(wg,M(c)));
-    const hs=new THREE.Shape();hs.moveTo(0,-2.6);hs.lineTo(2.9,-5.4);hs.lineTo(2.9,-6.1);hs.lineTo(-2.9,-6.1);hs.lineTo(-2.9,-5.4);hs.closePath();
-    const hg=new THREE.ExtrudeGeometry(hs,{depth:.16,bevelEnabled:false});hg.rotateX(Math.PI/2);hg.translate(0,.1,0);
-    g.add(new THREE.Mesh(hg,M(c)));
-    const twin=kind==='f15'||kind==='f35';
-    const xs=twin?[-1.2,1.2]:[0];
-    for(const sx of xs){const f=box(.18,2.5,2.2,c);f.position.set(sx,1.55,-fl/2+.7);f.rotation.x=-.42;if(twin)f.rotation.z=sx>0?-.25:.25;g.add(f);}
-    if(kind==='bomber'){for(const sx of [-5,-3,3,5]){const p=cyl(.45,.45,2.4,dk,6);p.rotation.x=Math.PI/2;p.position.set(sx,-.5,-.6);g.add(p);}}
-  }
-  const nz=cyl(.58,.7,1.2,dk,8);nz.rotation.x=Math.PI/2;nz.position.z=-fl/2-.4;g.add(nz);
-  const glow=new THREE.Mesh(new THREE.CylinderGeometry(.5,.15,2.4,8),new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.85,depthWrite:false}));
-  glow.rotation.x=-Math.PI/2;glow.position.z=-fl/2-2;g.add(glow);
-  const muzzle=obj(.75,.3,fl/2+.6);g.add(muzzle);
-  const pylons=[obj(3,-.5,0),obj(-3,-.5,0)];pylons.forEach(p=>g.add(p));
-  g.scale.setScalar(s);
-  return {g,glow,muzzle,pylons};
-}
 function makeCarrier(len,c){
   const g=new THREE.Group(),dk=0x3b3f42;
   const w=len*.15,H=len*.07;
@@ -755,19 +898,6 @@ function makeCarrier(len,c){
   const vls=obj(-w*.55,dt+1,-len*.36);g.add(vls);
   const launch=obj(0,dt+3,len*.35);g.add(launch);
   return {g,turrets:[t],ciws,vls,launch,deckY:dt,len,w,H};
-}
-function makeHeli(c){
-  const g=new THREE.Group(),dk=0x2c2d27;
-  const b=new THREE.Mesh(new THREE.SphereGeometry(1.8,8,6),M(c));b.scale.set(1,.95,2.1);g.add(b);
-  const tb=cyl(.28,.45,7,c,6);tb.rotation.x=Math.PI/2;tb.position.set(0,.4,-5.4);g.add(tb);
-  g.add(at(box(.15,1.8,1.2,c),0,1.2,-8.6));
-  g.add(at(box(4.6,.16,1,c),0,-.3,.4));
-  for(const sx of [-2,2]){const p=cyl(.32,.32,1.8,dk,6);p.rotation.x=Math.PI/2;p.position.set(sx,-.6,.5);g.add(p);}
-  g.add(at(box(.15,.15,4,dk),1.1,-1.8,0));g.add(at(box(.15,.15,4,dk),-1.1,-1.8,0));
-  const rotor=new THREE.Group();rotor.position.y=2.1;g.add(rotor);
-  rotor.add(box(13,.08,.5,dk));const r2=box(13,.08,.5,dk);r2.rotation.y=Math.PI/2;rotor.add(r2);
-  rotor.add(cyl(.3,.3,.6,dk,6));
-  return {g,rotor,muzzle:obj(0,-.6,3.6)};
 }
 function makeSite(c,kind){
   const g=new THREE.Group(),dk=0x2b2b26;
@@ -957,6 +1087,7 @@ function placeGround(u,len,wid){
 function buildPlayerModel(cls,T,col){
   const c=col==null?DEFCOL[cls]:col;
   if(cls==='infantry')return makeSoldier(c,T.id);
+  if(cls==='heli')return makeHeli(c,T.id,1);
   if(cls==='tank')return T.id==='ifv'?makeAPC(c,T.scale):makeTank(c,T.id,T.scale);
   if(cls==='ship')return makeShip(T.len,T.tur,c,{barrels:T.barrels});
   if(cls==='carrier')return makeCarrier(T.len,c);
@@ -964,6 +1095,7 @@ function buildPlayerModel(cls,T,col){
 }
 function spawnPointFor(cls,T){
   const dom=CLASSES[cls].domain;
+  if(cls==='heli'){const sp=findSpot('land',HALF*.2,0,0,HALF*.6,300,0);return sp?sp.setY(height(sp.x,sp.z)+30):new V3(0,60,0);}
   if(dom==='air')return new V3(0,350,0);
   if(dom==='land'){return findSpot('land',HALF*.35,0,0,TP.town?HALF*.22:HALF*.4,400,0)||findSpot('land',0,0,0,HALF*.9,2000,0)||new V3(HALF*.5,0,0);}
   const cl=T.len*.6;
@@ -987,7 +1119,8 @@ function setPreview(){
 function updatePreview(dt,t){
   if(!preview)return;const p=preview,T=p.T,dom=CLASSES[p.cls].domain;
   let r,hgt,tgt=new V3();
-  if(dom==='air'){p.pos.set(Math.sin(t*.15)*160,320+Math.sin(t*.3)*10,Math.cos(t*.15)*160);const d=new V3(Math.cos(t*.15),0,-Math.sin(t*.15));p.model.position.copy(p.pos);p.model.lookAt(_a.copy(p.pos).add(d));p.model.rotateZ(.5);r=34;hgt=8;tgt.copy(p.pos);if(p.parts.glow)p.parts.glow.scale.set(1,1,.7+Math.random()*.3);}
+  if(p.cls==='heli'){p.model.position.copy(p.pos);p.model.position.y+=Math.sin(t*1.3)*.2;p.model.rotation.set(Math.sin(t*.7)*.03,p.yaw,Math.sin(t*.5)*.04,'YXZ');p.parts.rotor.rotation.y+=dt*26;p.parts.tailRotor.rotation.x+=dt*44;r=24;hgt=5;tgt.copy(p.pos);}
+  else if(dom==='air'){p.pos.set(Math.sin(t*.15)*160,320+Math.sin(t*.3)*10,Math.cos(t*.15)*160);const d=new V3(Math.cos(t*.15),0,-Math.sin(t*.15));p.model.position.copy(p.pos);p.model.lookAt(_a.copy(p.pos).add(d));p.model.rotateZ(.5);r=34;hgt=8;tgt.copy(p.pos);if(p.parts.glow)p.parts.glow.scale.set(1,1,.7+Math.random()*.3);}
   else if(dom==='land'){p.yaw+=dt*.0;placeGround(p,3.5,1.8);r=20*(T.scale||1);hgt=6*Math.min(1,(T.scale||1)*1.4);tgt.copy(p.pos);tgt.y+=2*(T.scale||1);p.parts.turrets[0].tur.rotation.y=Math.sin(t*.4)*.6;if(p.parts.hips)animSoldier(p.parts,0,dt);}
   else{shipWave(p,T.len,T.len*.14,dt);r=T.len*1.25+20;hgt=T.len*.35;tgt.copy(p.pos);tgt.y+=T.len*.08;}
   const ang=t*.12;
@@ -1014,6 +1147,7 @@ function createPlayer(){
   else{p.camDist=32;p.eye=2.5;p.pos.set(0,380,0);p.yaw=0;p.q=new Q4().setFromAxisAngle(UP,p.yaw);p.speed=lerp(T.min,T.max,.55);p.throttle=.55;}
   if(p.cls==='infantry'){p.camDist=5.5;p.eye=1.75;p.soldier=true;}
   if(T.id==='bomber'){p.camDist=60;p.eye=4;}
+  if(p.cls==='heli'){p.camDist=24;p.eye=2;p.pos.copy(spawnPointFor('heli',T));p.yaw=Math.atan2(-p.pos.x,-p.pos.z);p.q.setFromAxisAngle(UP,p.yaw);p.speed=0;p.throttle=0;p.vel.set(0,0,0);}
   p.w=(T.weapons||C.weapons).map(id=>{const d=WEAPONS[id];let ammo=d.ammo;if(isFinite(ammo)){if(T.ammo&&typeof T.ammo==='object')ammo=T.ammo[id]!=null?T.ammo[id]:ammo;else ammo=Math.max(1,Math.round(ammo*(T.ammo||1)));}const RT={asm:9,sam:7,cruise:12,atgm:8,sam_t:7,aam:7,agm:9,bomb:10,rifle:2.2,smg:1.8,lmg:5,sniper:3,amr:4,grenade:8,rpg:7,manpads:7};return {id,def:d,ammo,max:ammo,cd:0,reload:0,rt:RT[id]||8};});
   p.wi=0;
   p.sk=C.skills.map(id=>({id,def:SKILLS[id],cd:0}));
@@ -1037,7 +1171,7 @@ function startGame(){
   G.camYaw=G.player.yaw;G.camPitch=G.player.domain==='air'?0:-.08;G.camOff.set(0,0,0);G.camScale=1;G.zoom=false;
   G.inter=4;G.waveActive=false;
   $('#menu').hidden=true;$('#over').hidden=true;$('#pause').hidden=true;$('#hud').hidden=false;
-  $('#touch').hidden=!isTouch;$('#tHide').hidden=G.player.cls!=='infantry';
+  $('#touch').hidden=!isTouch;$('#tHide').hidden=G.player.cls!=='infantry';$('#tUp').hidden=$('#tDown').hidden=G.player.cls!=='heli';
   buildHUD();
   banner('작전 개시',`${G.player.T.name} · ${TERRAINS[S.terrain].name} · ${DIFF.name} · 무한 웨이브`,3);
   tryLock();
@@ -1057,14 +1191,15 @@ function toMenu(){
 }
 function waveComposition(n){
   let total=Math.min(30,Math.round((3+n*1.7)*DIFF.count));
-  let cls=!S.foeCls||S.foeCls==='mine'?G.player.cls:S.foeCls==='random'?pick(TP.noLand?['ship','carrier','jet']:['ship','carrier','tank','infantry','jet']):S.foeCls;
+  let cls=!S.foeCls||S.foeCls==='mine'?G.player.cls:S.foeCls==='random'?pick(TP.noLand?['ship','carrier','jet','heli']:['ship','carrier','tank','infantry','jet','heli']):S.foeCls;
   let MAIN=MAINW[cls],vname='';
+  if(n<3&&cls==='ship')MAIN={'boat:corvette':.55,'boat:destroyer':.45};
   if(S.foeCls!=='random'&&S.foeVar&&S.foeVar!=='random'&&VK[cls][S.foeVar]){const kk=VK[cls][S.foeVar];vname=FOEVARS[cls][S.foeVar];MAIN=cls==='carrier'?{[kk]:.35,'boat:destroyer':.65}:{[kk]:1};}
   const OTHER=OTHERW[cls];
   const share=rand(.8,1);
   const wpick=W=>{const ks=Object.keys(W);let r=Math.random(),acc=0;for(const k of ks){acc+=W[k];if(r<=acc)return k;}return ks[0];};
   const list=[];
-  if(n%5===0){const boss=cls==='tank'||cls==='infantry'?'heavytank':cls==='jet'?'bomber':'bigship';const nb=Math.min(4,1+Math.floor(n/10));for(let i=0;i<nb;i++)list.push(boss);total=Math.max(2,total-4*nb);}
+  if(n%5===0){const boss=cls==='tank'||cls==='infantry'?'heavytank':cls==='jet'||cls==='heli'?'bomber':'bigship';const nb=Math.min(4,1+Math.floor(n/10));for(let i=0;i<nb;i++)list.push(boss);total=Math.max(2,total-4*nb);}
   const nMain=Math.round(total*share);let carriers=0;const maxCv=Math.min(3,1+Math.floor(n/4));
   for(let i=0;i<total;i++){let k=i<nMain?wpick(MAIN):wpick(OTHER);if(k.startsWith('ecarrier')){if(carriers>=maxCv)k='boat:destroyer';else carriers++;}list.push(k);}
   for(let i=list.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=list[i];list[i]=list[j];list[j]=t;}
@@ -1078,7 +1213,7 @@ function startWave(n){
   const list=waveComposition(n);
   list.forEach((k,i)=>G.sched.push({t:i*.35,fn:()=>spawnEnemy(k,n)}));
   const boss=list.some(k=>{const bk=k.split(':')[0];return EK[bk]&&EK[bk].boss&&!(EV[k]&&EV[k].boss===false);});
-  const mainName={ship:'적 함선',carrier:'적 항모 함대',tank:'적 기갑부대',jet:'적 항공기',infantry:'적 보병'}[list.cls]+(list.vname?` (${list.vname})`:'');
+  const mainName={ship:'적 함선',carrier:'적 항모 함대',tank:'적 기갑부대',jet:'적 항공기',infantry:'적 보병',heli:'적 헬기'}[list.cls]+(list.vname?` (${list.vname})`:'');
   banner(`웨이브 ${n}`,(boss?'대형 표적 접근 · ':'')+`적 ${list.length}기 접근 · ${mainName} ${list.mainPct}%`,2.6);
 }
 
@@ -1106,7 +1241,7 @@ function spawnEnemy(kindStr,n,at){
     case 'bigship':b=makeShip(82,3,0x4c4848,{barrels:2});break;
     case 'ecarrier':b=makeCarrier(V?V.len:84,0x55504c);break;
     case 'jet':b=makeJet(0x6a5250,V&&V.model?V.model:'f16',1);break;
-    case 'heli':b=makeHeli(0x5b5a44);break;
+    case 'heli':b=makeHeli(0x5b5a44,V&&V.model?V.model:'attack',1);break;
     case 'apc':b=makeAPC(0x6b5a46,1);break;
     case 'attacker':b=makeJet(0x5c574a,'a10',1.15);break;
     case 'bomber':b=makeJet(0x4a4646,'bomber',V&&V.scale?V.scale:2.4);break;
@@ -1306,7 +1441,7 @@ function heliAI(u,dt,t,gH){
   const gg=Math.max(height(u.pos.x,u.pos.z),0)+40;alt=Math.max(alt,gg);
   u.pos.y+=clamp(alt-u.pos.y,-20*dt,20*dt);
   u.model.position.copy(u.pos);u.model.position.y+=Math.sin(G.time*1.3+u.side)*.6;u.model.rotation.set(.12+(u.hv||0)*.15,u.yaw,(u.hs||0)*.28+Math.sin(G.time*.9+u.side)*.02,'YXZ');
-  u.parts.rotor.rotation.y+=dt*28;
+  u.parts.rotor.rotation.y+=dt*28;if(u.parts.tailRotor)u.parts.tailRotor.rotation.x+=dt*44;
   u.vel.copy(u.pos).sub(u.prev).divideScalar(Math.max(dt,1e-4));
   syncUnit(u);
 }
@@ -1590,7 +1725,8 @@ function updatePlayer(dt){
     shipWave(p,T.len,T.len*.14,dt,ax.x*.025*(p.speed/T.speed));
     if(Math.abs(p.speed)>3&&Math.random()<dt*20){const bk=-T.len*.5;fx(false,_e.set(p.pos.x+Math.sin(p.yaw)*bk+rand(-2,2),.5,p.pos.z+Math.cos(p.yaw)*bk+rand(-2,2)),_f.set(0,.4,0),T.len*.07,T.len*.06,3,0xf0f5f6,.6);
       fx(false,_e.set(p.pos.x+Math.sin(p.yaw)*T.len*.45,.8,p.pos.z+Math.cos(p.yaw)*T.len*.45),_f.set(rand(-2,2),1,rand(-2,2)),T.len*.04,T.len*.05,1,0xffffff,.6);}
-  }else updateJet(p,dt,ax);
+  }else if(p.cls==='heli')updateHeliPlayer(p,dt,ax);
+  else updateJet(p,dt,ax);
   syncUnit(p);
   if(p.domain!=='air'){p.vel.copy(p.pos).sub(p.prev).divideScalar(Math.max(dt,1e-4));}
   // boundary
@@ -1601,6 +1737,32 @@ function updatePlayer(dt){
     if(w.reload>0){w.reload-=dt;if(w.reload<=0){w.reload=0;w.ammo=w.max;pushFeed(`${w.def.name} 재장전 완료`);}}
     else if(isFinite(w.max)&&w.ammo<=0&&S.reload!=='manual'){w.reload=w.rt;pushFeed(`${w.def.name} 재장전 시작 (${w.rt}초)`);}}
   for(const s of p.sk)s.cd=Math.max(0,s.cd-dt);
+}
+function updateHeliPlayer(p,dt,ax){
+  const T=p.T,boost=p.boost>0,maxS=T.speed*(boost?1.4:1);
+  const fy=G.camYaw,fx_=Math.sin(fy),fz=Math.cos(fy),rx=-Math.cos(fy),rz=Math.sin(fy);
+  let ix=fx_*ax.y+rx*ax.x,iz=fz*ax.y+rz*ax.x;const il=Math.hypot(ix,iz);if(il>1){ix/=il;iz/=il;}
+  const acc=24*(boost?1.4:1);p.vel.x+=ix*acc*dt;p.vel.z+=iz*acc*dt;
+  const hs=Math.hypot(p.vel.x,p.vel.z);if(hs>maxS){p.vel.x*=maxS/hs;p.vel.z*=maxS/hs;}
+  const drag=il>.05?.2:.85;p.vel.x-=p.vel.x*drag*dt;p.vel.z-=p.vel.z*drag*dt;
+  const up=(keys.ShiftLeft||keys.ShiftRight||tc.up?1:0)-(keys.KeyZ||tc.down?1:0);
+  p.vel.y+=(up*11-p.vel.y)*Math.min(1,dt*2.2);
+  p.pos.addScaledVector(p.vel,dt);
+  const g=Math.max(height(p.pos.x,p.pos.z),0);let gr=g;
+  const bb=bldAt(p.pos.x,p.pos.z,0);if(bb)gr=Math.max(gr,bb.top);
+  const hh=CV.houses.length?houseAt(p.pos.x,p.pos.z,0):null;if(hh)gr=Math.max(gr,hh.y+hh.h);
+  if(p.pos.y<gr+2){if(p.vel.y<-8){const hurt=Math.round((-p.vel.y-8)*14);damage(p,hurt,null);banner('','거친 착지 · 체력 -'+hurt,1.2);}p.pos.y=gr+2;if(p.vel.y<0)p.vel.y=0;p.vel.x*=.92;p.vel.z*=.92;}
+  if(p.pos.y>900){p.pos.y=900;if(p.vel.y>0)p.vel.y=0;}
+  p.yaw+=angDiff(p.yaw,fy)*Math.min(1,dt*T.turn*2.2);
+  const sy=Math.sin(p.yaw),cy=Math.cos(p.yaw);
+  const lvF=p.vel.x*sy+p.vel.z*cy,aF=ix*sy+iz*cy,aR=-ix*cy+iz*sy;
+  p.hp_=lerp(p.hp_||0,clamp(aF*.3+lvF/maxS*.12,-.4,.45),Math.min(1,dt*3));
+  p.hr_=lerp(p.hr_||0,clamp(aR*.35,-.45,.45),Math.min(1,dt*3));
+  _eu.set(p.hp_,p.yaw,p.hr_+Math.sin(G.time*1.7)*.01,'YXZ');p.q.setFromEuler(_eu);
+  p.model.position.copy(p.pos);p.model.position.y+=Math.sin(G.time*1.3)*.15;p.model.quaternion.copy(p.q);
+  p.speed=hs;p.throttle=clamp(.5+up*.5,0,1);
+  p.parts.rotor.rotation.y+=dt*(26+Math.abs(up)*6+(boost?6:0));if(p.parts.tailRotor)p.parts.tailRotor.rotation.x+=dt*44;
+  const agl=p.pos.y-g;if(agl<28&&Math.random()<dt*24){const a=Math.random()*TAU,r=rand(3,10);const wp=new V3(p.pos.x+Math.sin(a)*r,g+.5,p.pos.z+Math.cos(a)*r);fx(false,wp,new V3(Math.sin(a)*7,1,Math.cos(a)*7),3,4,1.2,height(wp.x,wp.z)<0?0xeef3f4:0x9a8c74,.45);}
 }
 function updateJet(p,dt,ax){
   const T=p.T,boost=p.boost>0;
@@ -1681,17 +1843,17 @@ function updateLock(dt){
 }
 function locked(){return G.lockCand&&G.lockCand.alive&&G.lockT>=.55?G.lockCand:null;}
 function updateTurrets(dt){
-  const p=G.player;if(p.domain==='air'||!p.alive)return;
+  const p=G.player;if((p.domain==='air'&&p.cls!=='heli')||!p.alive)return;
   const tur=p.parts.turrets;const w=p.w[p.wi];
   for(const t of tur){
     aimTurret(t,p.yaw,G.aim,p.domain==='land'?1.6:.9,dt);
     t.muzzles[0].getWorldPosition(_e);
     const cw=p.w[p.wi].def;
-    const def=p.cls==='infantry'?(cw.kind==='shell'?cw:{speed:5000,grav:.01}):p.T.id==='ifv'?{speed:5000,grav:.01}:p.domain==='land'?WEAPONS.tank_gun:WEAPONS[p.cls==='carrier'?'naval_gun_s':'naval_gun'];
+    const def=p.cls==='infantry'?(cw.kind==='shell'?cw:{speed:5000,grav:.01}):p.cls==='heli'||p.T.id==='ifv'?{speed:5000,grav:.01}:p.domain==='land'?WEAPONS.tank_gun:WEAPONS[p.cls==='carrier'?'naval_gun_s':'naval_gun'];
     const hd=Math.hypot(G.aim.x-_e.x,G.aim.z-_e.z),up=G.aim.y-_e.y;
     const ang=(up>40&&up>hd*.25)?Math.atan2(up,hd):ballistic(_e,G.aim,def.speed,def.grav);
-    const maxE=p.domain==='land'?(p.T.id==='spaag'||p.cls==='infantry'?1.3:p.T.id==='ifv'?.9:.4):1.3;
-    pitchBarrel(t,ang,p.domain==='land'?-.15:-.1,maxE);
+    const maxE=p.cls==='heli'?.35:p.domain==='land'?(p.T.id==='spaag'||p.cls==='infantry'?1.3:p.T.id==='ifv'?.9:.4):1.3;
+    pitchBarrel(t,ang,p.cls==='heli'?-1.35:p.domain==='land'?-.15:-.1,maxE);
     if(p.cls!=='infantry')recoilT(t,dt);
   }
 }
@@ -1724,7 +1886,7 @@ function fireWeapon(){
       else{
         if(p.parts.ciws&&p.parts.ciws.length){p.cd2.ciws=(p.cd2.ciws+1)%p.parts.ciws.length;p.parts.ciws[p.cd2.ciws].getWorldPosition(_a);}
         else if(p.cls==='tank'&&D.flak){const t=p.parts.turrets[0];t.muzzles[(G.time*20|0)%2].getWorldPosition(_a);}
-        else if(p.cls==='infantry'||T.id==='ifv'){p.parts.turrets[0].muzzles[0].getWorldPosition(_a);}
+        else if(p.cls==='infantry'||p.cls==='heli'||T.id==='ifv'){p.parts.turrets[0].muzzles[0].getWorldPosition(_a);}
         else{p.parts.turrets[0].tur.getWorldPosition(_a);_a.y+=1.6*(T.scale||1);}
         from=_a;let tgtPt=G.aim;
         if(p.cls==='infantry'&&!D.autoAir){let best=null,ba=.09;for(const e of G.enemies){if(!e.alive||e.domain!=='air')continue;const v=_c.copy(e.c).sub(camera.position);if(v.length()>D.range+300)continue;const a1=v.normalize().angleTo(_cf);const lp=leadAir(from,e,D.speed,_d);const a2=_c.copy(lp).sub(camera.position).normalize().angleTo(_cf);const a=Math.min(a1,a2);if(a<ba){ba=a;best=e;}}if(best)tgtPt=leadAir(from,best,D.speed,_d);}
@@ -1745,6 +1907,8 @@ function fireWeapon(){
       spawnMissile('player',from,dir,o);
       fx(false,from,_e.set(0,2,0),4,6,1.6,0xdcdcd6,.7);
       w.ammo--;w.cd=D.cd;break;}
+    case 'rocket':{for(let k=0;k<2&&w.ammo>0;k++){const py=p.parts.pylons[(w.ammo+k)%p.parts.pylons.length];py.getWorldPosition(_a);const dir=_b.copy(G.aim).sub(_a).normalize();dir.x+=rand(-.012,.012);dir.y+=rand(-.012,.012);dir.z+=rand(-.012,.012);dir.normalize();
+        const v=_c.copy(dir).multiplyScalar(D.speed).add(p.vel);spawnShell('player',_a,v,D.dmg*p.paintMod.dmg,D.blast,D.grav,.6,true);fx(false,_a,null,2.5,3,1,0xdcdcd6,.6);w.ammo--;}w.cd=D.cd;break;}
     case 'bomb':{
       p.parts.muzzle.getWorldPosition(_a);_a.y-=2.5;{const bb=spawnBomb('player',_a,p.vel,D.dmg*p.paintMod.dmg,D.blast,lk);if(D.cluster){bb.cluster=true;bb.target=null;}}w.ammo--;w.cd=D.cd;break;}
   }
@@ -1768,7 +1932,7 @@ function useSkill(i){
     case 'medic':{p.repairT=D.dur;const n=refillSquad(1);if(n)pushFeed('쓰러진 분대원 복귀');break;}
     case 'artillery':{const c=G.aim.clone();for(let k=0;k<14;k++)G.sched.push({t:.8+k*.18,fn:()=>{const tp=_a.set(c.x+rand(-28,28),0,c.z+rand(-28,28));const st=_b.set(tp.x+rand(-30,30),Math.max(height(tp.x,tp.z),0)+380,tp.z+rand(-30,30));spawnShell('player',st,_c.set((tp.x-st.x)/2,-150,(tp.z-st.z)/2),160,14,20,1.3);}});banner('','포병 지원 요청 — 탄착까지 약 3초',1.4);break;}
     case 'flare':p.flare=D.dur;for(let k=0;k<16;k++)G.sched.push({t:k*.12,fn:()=>{if(!p.alive)return;const b=_e.copy(p.pos).addScaledVector(_f.set(0,0,-1).applyQuaternion(p.q),6);fx(true,b,_f.copy(p.vel).multiplyScalar(.3).add(_a.set(rand(-25,25),rand(-20,-5),rand(-25,25))),3.5,-1,2.2,0xfff0b0,1,.97,-15);}});break;
-    case 'afterburner':p.boost=D.dur;break;
+    case 'afterburner':case 'turbo':p.boost=D.dur;break;
   }
   s.cd=D.cd*(T.skillCd||1);
 }
@@ -1791,7 +1955,8 @@ function updateHUD(dt){
   const hb=$('#hpTop');hb.classList.toggle('warn',r<=.5&&r>.25);hb.classList.toggle('crit',r<=.25);hb.classList.toggle('heal',p.repairT>0);
   $('#hHp').textContent=Math.max(0,Math.round(p.hp)).toLocaleString('ko-KR')+' / '+p.maxHp.toLocaleString('ko-KR');$('#hPct').textContent=Math.ceil(r*100)+'%';
   let s1;
-  if(p.domain==='air')s1=`<span>${Math.round(p.speed*3.6)} km/h · 고도 ${Math.round(p.pos.y-Math.max(0,height(p.pos.x,p.pos.z)))} m · 추력 <b>${Math.round(p.throttle*100)}%</b></span>`;
+  if(p.cls==='heli')s1=`<span>${Math.round(p.speed*3.6)} km/h · 고도 <b>${Math.round(p.pos.y-Math.max(0,height(p.pos.x,p.pos.z)))} m</b> · 상승 Shift / 하강 Z</span>`;
+  else if(p.domain==='air')s1=`<span>${Math.round(p.speed*3.6)} km/h · 고도 ${Math.round(p.pos.y-Math.max(0,height(p.pos.x,p.pos.z)))} m · 추력 <b>${Math.round(p.throttle*100)}%</b></span>`;
   else if(p.domain==='sea')s1=`<span>${(Math.abs(p.speed)*1.94/1.2).toFixed(0)} 노트 · 속도 단계 <b>${p.throttle<-.05?'후진':Math.round(p.throttle*100)+'%'}</b></span>`;
   else s1=`<span>속도 <b>${Math.round(Math.abs(p.speed)*3.6)} km/h</b>${p.cls==='infantry'?(p.T.squad?` · 분대원 <b>${G.allies.filter(a=>a.soldier).length} / ${p.T.squad}</b> (${S.squadMove==='free'?'자유':'따라오기'})`:' · <b>단독 작전</b>'):''}${p.cls==='infantry'?(p.hidden?' · <b style="color:var(--good)">잠복 중</b>':p.revealT>0&&p.coverType?' · <b style="color:var(--red)">발각</b>':p.crouch?(p.coverType?' · <b>엎드림</b>':' · <b>엎드림 (엄폐 없음)</b>'):''):''}</span>`;
   $('#hS1').innerHTML=s1;
@@ -1804,7 +1969,7 @@ function updateHUD(dt){
   const mw=G.projs.some(q=>q.team==='enemy'&&(q.kind==='missile'||q.kind==='cruise')&&q.target===p&&q.pos.distanceTo(p.pos)<1800);
   if(mw)warn=(G.time*4|0)%2?'미사일 경보':'· 미사일 경보 ·';
   if(p.oob>0)warn='작전 구역 이탈 — 복귀하세요';
-  if(p.domain==='air'&&p.pos.y-Math.max(0,height(p.pos.x,p.pos.z))<60&&p.vel.y<-5)warn='고도 경고 — 기수를 올리세요';
+  if(p.domain==='air'&&p.cls!=='heli'&&p.pos.y-Math.max(0,height(p.pos.x,p.pos.z))<60&&p.vel.y<-5)warn='고도 경고 — 기수를 올리세요';
   $('#warn').textContent=warn;
   // feed
   const fe=$('#feed');G.feed=G.feed.filter(f=>G.time-f.t<4.5);fe.innerHTML='';G.feed.slice(-5).forEach(f=>{const d=document.createElement('div');d.textContent=f.s;fe.append(d);});
@@ -2005,6 +2170,7 @@ glc.addEventListener('touchend',tEnd);glc.addEventListener('touchcancel',tEnd);
 const tf=$('#tFire');tf.addEventListener('touchstart',e=>{e.preventDefault();tc.fire=true;},{passive:false});tf.addEventListener('touchend',()=>{tc.fire=false;});tf.addEventListener('touchcancel',()=>{tc.fire=false;});
 $('#tZoom').addEventListener('click',()=>{G.zoom=!G.zoom;});
 $('#tHide').addEventListener('click',()=>toggleCrouch());
+for(const [id,k] of [['#tUp','up'],['#tDown','down']]){const el=$(id);el.addEventListener('touchstart',e=>{e.preventDefault();tc[k]=true;},{passive:false});el.addEventListener('touchend',()=>{tc[k]=false;});el.addEventListener('touchcancel',()=>{tc[k]=false;});}
 $('#tPause').addEventListener('click',()=>setPause(true));
 $('#resumeBtn').addEventListener('click',()=>setPause(false));
 $('#quitBtn').addEventListener('click',()=>toMenu());
