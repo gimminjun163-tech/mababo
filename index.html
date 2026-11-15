@@ -2372,7 +2372,7 @@ function spawnFormation(){
     const col=i%cols-(cols-1)/2,row=Math.floor(i/cols);const slot=[col*sp,row*sp];
     const pos=slotWorld(F,slot,new V3());
     if(sea?!okSea(pos.x,pos.z,1):!okInf(pos.x,pos.z))pos.copy(F.c);
-    if(sea)spawnRaft(pos,F,slot);else spawnHordeSoldier(pos,F,slot,units>=10&&i%10===9,i===Math.floor((cols-1)/2));
+    if(sea)spawnRaft(pos,F,slot);else spawnHordeSoldier(pos,F,slot,units>=10&&i%10===9,(i===Math.floor((cols-1)/2)||(row===0||i===col||i===0)));
   }
   hw.left=Math.max(0,hw.left-n);
   pushFeed(sea?`적 상륙 보트 ${units}척 접근 (${n}명)`:`적 보병 대대 대형 돌격 (${n}명)`);
