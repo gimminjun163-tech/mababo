@@ -251,6 +251,7 @@ details.keys b{color:var(--hud);font-weight:500}
         <div class="optrow" id="rowFoe"><span class="lab">주로 나오는 적 (병과)</span><div id="optFoe" class="seg"></div></div>
         <div class="optrow" id="rowFoeVar"><span class="lab">적 기종</span><div id="optFoeVar" class="seg"></div></div>
         <div class="optrow"><span class="lab">탄약을 다 썼을 때</span><div id="optReload" class="seg"></div></div>
+        <div class="optrow"><span class="lab">마우스 고정 (게임 중 L키로 전환)</span><div id="optMouse" class="seg"></div></div>
         <div class="optrow" id="rowSquad"><span class="lab">보병 편성</span><div id="optSquad" class="seg"></div></div>
         <div class="optrow" id="rowSquadMove"><span class="lab">분대원 이동 (게임 중 G키로 전환)</span><div id="optSquadMove" class="seg"></div></div>
         <button id="reroll" class="ghost" type="button">같은 지형 종류로 새 지도 만들기</button>
@@ -262,7 +263,7 @@ details.keys b{color:var(--hud);font-weight:500}
           <p><b>보병</b> WASD로 보는 방향 기준 이동, Shift 달리기, 우클릭 조준(저격수는 조준경). 분대원이 따라오며 가까운 적을 쏩니다. 소총탄은 장갑 차량에 거의 안 들어가니 대전차 로켓이나 대물 저격총을 쓰세요. 적 병사의 머리를 맞히면 헤드샷(피해 5배·적 병사 즉사, 점수 2배)이고, G키로 분대원을 나를 따라오게 할지 자유롭게 움직이게 할지 바꿀 수 있어요. V키로 엎드리면 집 안이나 나무·건물 옆에서 잠복해 적에게 들키지 않고, 쏘면 잠시 발각됩니다. 집 안에서는 창문 너머로 쏘 수 있어요.</p>
           <p><b>헬기</b> WASD로 보는 방향 기준 전후좌우 이동, Shift 상승, Z 하강(손을 떼면 고도 유지). 기수 아래 포탑이 조준선을 따라가고, 로켓은 조준선 쪽으로 2발씩 날아가요. 지형과 건물 뒤에 숨었다 튀어나와 공격하세요.</p>
           <p><b>폭격기</b> 폭탄을 들면 땅에 노란 탄착 예상 지점이 표시됩니다. 집속탄은 땅 가까이에서 작은 폭탄 12개로 터져요. 폭발은 나무와 집도 무너뜨리고, 전차는 나무를 밀고 집을 들이받아 부수며 지나갑니다.</p>
-          <p><b>공통</b> 1~4 또는 휠로 무기 선택, Q/E/R 스킬 바로 사용, Tab 스킬 선택, 스페이스 선택된 스킬 사용, C 시점 거리, Esc 일시정지. 미사일은 목표를 조준선 가까이 두면 잠금됩니다. 미사일·폭탄을 다 쓰면 재장전합니다. 설정에서 자동 또는 수동을 고를 수 있고, F키(터치는 선택된 무기 칸을 한 번 더)로 언제든 직접 재장전할 수 있어요.</p>
+          <p><b>공통</b> 1~4 또는 휠로 무기 선택, Q/E/R 스킬 바로 사용, Tab 스킬 선택, 스페이스 선택된 스킬 사용, C 시점 거리, L 마우스 고정 켜기/끄기, Esc 일시정지. 미사일은 목표를 조준선 가까이 두면 잠금됩니다. 미사일·폭탄을 다 쓰면 재장전합니다. 설정에서 자동 또는 수동을 고를 수 있고, F키(터치는 선택된 무기 칸을 한 번 더)로 언제든 직접 재장전할 수 있어요.</p>
           <p><b>터치</b> 왼쪽 화면 드래그로 이동, 오른쪽 드래그로 조준, 발사 버튼을 누르고 있기</p>
         </details>
       </section>
@@ -270,7 +271,7 @@ details.keys b{color:var(--hud);font-weight:500}
   </div>
 </div>
 
-<div id="pause" class="dlg" hidden><div class="box"><h3>일시정지</h3><p>화면을 클릭하거나 계속하기를 누르면 전투가 재개됩니다.</p><div class="row2"><button class="go" id="resumeBtn" type="button">계속하기</button><button class="ghost" id="quitBtn" type="button">메뉴로</button></div></div></div>
+<div id="pause" class="dlg" hidden><div class="box"><h3>일시정지</h3><p>화면을 클릭하거나 계속하기를 누르면 전투가 재개됩니다. L키로 마우스 고정을 켜고 끌 수 있어요.</p><div class="row2"><button class="go" id="resumeBtn" type="button">계속하기</button><button class="ghost" id="quitBtn" type="button">메뉴로</button></div></div></div>
 <div id="over" class="dlg" hidden><div class="box"><h3 id="oTitle">격파됨</h3><p id="oSub"></p><div class="stats"><div><small>도달 웨이브</small><b id="oWave">0</b></div><div><small>격파</small><b id="oKills">0</b></div><div><small>점수</small><b id="oScore">0</b></div></div><div class="row2"><button class="go" id="retryBtn" type="button">다시 출격</button><button class="ghost" id="menuBtn" type="button">설정 바꾸기</button></div></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -430,6 +431,7 @@ EK.attacker={name:'적 공격기',domain:'air',hp:420,speed:150,score:400};
 EK.inf={name:'적 보병',domain:'land',hp:45,speed:6.5,score:40,soldier:true};
 for(const k of ['tank','heavytank','apc','boat','bigship','ecarrier','battery','aa'])EK[k].armored=true;
 const RELOADS={auto:{name:'자동 재장전'},manual:{name:'수동 (F키)'}};
+const MOUSELOCKS={on:{name:'켜기 (클릭하면 고정)'},off:{name:'끄기 (누른 채 끌어서 시점)'}};
 const DEFCOL={heli:0x55603f,infantry:0x5b6346,tank:0x5f6b45,ship:0x7f8b93,carrier:0x7a868e,jet:0x8c98a2};
 const PAINTS={
   std:{name:'기본 도색',col:null,m:{}},
@@ -510,10 +512,10 @@ const EV={
   'heli:scout':{name:'적 정찰헬기',hp:120,speed:55,model:'scout',score:110},
   'bomber:bomber':{name:'적 폭격기',hp:800,scale:1.8,score:600,boss:false},
 };
-const MODES={wave:{name:'웨이브 (AI 적)'},horde:{name:'인해전술 (무한 보병 돌격)'},pvp:{name:'온라인 대전 (PvP,https://claude.ai/artifact/C9QDAv37h7sULvGHVUr3Lq 에서만 가능)'}};
+const MODES={wave:{name:'웨이브 (AI 적)'},horde:{name:'인해전술 (무한 보병 돌격)'},pvp:{name:'온라인 대전 (PvP)'}};
 const PVPTEAMS={ffa:{name:'개인전 (1:1:1…)'},team:{name:'팀전 (빨강 vs 파랑)'}};
 const TEAMPICK={auto:{name:'자동'},red:{name:'빨강'},blue:{name:'파랑'}};
-const S={cls:'ship',type:1,terrain:'coast',time:'day',size:'normal',diff:'normal',reload:'auto',paint:'std',wave:'normal',squadMode:'squad',squadMove:'follow',foeCls:'mine',foeVar:'random',mode:'wave',pvpCode:'main',pvpTeam:'ffa',teamPick:'auto',hordeSize:'big',model:'base',nick:'',seed:(Math.random()*1e6)|0};
+const S={mouseLock:'on',cls:'ship',type:1,terrain:'coast',time:'day',size:'normal',diff:'normal',reload:'auto',paint:'std',wave:'normal',squadMode:'squad',squadMove:'follow',foeCls:'mine',foeVar:'random',mode:'wave',pvpCode:'main',pvpTeam:'ffa',teamPick:'auto',hordeSize:'big',model:'base',nick:'',seed:(Math.random()*1e6)|0};
 try{const s=JSON.parse(localStorage.getItem('steelfront.settings')||'null');if(s&&CLASSES[s.cls]&&TERRAINS[s.terrain])Object.assign(S,s,{seed:(Math.random()*1e6)|0});}catch(e){}
 function saveSettings(){try{localStorage.setItem('steelfront.settings',JSON.stringify(S));}catch(e){}}
 function getBest(){try{return JSON.parse(localStorage.getItem('steelfront.best')||'{}');}catch(e){return {};}}
@@ -1438,7 +1440,7 @@ function clearBattle(){
   G.enemies=[];G.allies=[];G.wrecks=[];G.projs=[];G.sched=[];G.player=null;G.lockCand=null;
   for(const P of [FXA,FXN])for(const f of P.arr){f.life=0;f.s.visible=false;}
 }
-function toMenu(){
+function toMenu(){glc.style.cursor='';if(document.pointerLockElement===glc){ML.quiet=true;try{document.exitPointerLock();}catch(e){}}
   netLeave();clearBattle();G.state='menu';G.paused=false;
   $('#hud').hidden=true;$('#touch').hidden=true;$('#over').hidden=true;$('#pause').hidden=true;$('#menu').hidden=false;
   try{document.exitPointerLock&&document.exitPointerLock();}catch(e){}
@@ -2372,7 +2374,7 @@ function spawnFormation(){
     const col=i%cols-(cols-1)/2,row=Math.floor(i/cols);const slot=[col*sp,row*sp];
     const pos=slotWorld(F,slot,new V3());
     if(sea?!okSea(pos.x,pos.z,1):!okInf(pos.x,pos.z))pos.copy(F.c);
-    if(sea)spawnRaft(pos,F,slot);else spawnHordeSoldier(pos,F,slot,units>=10&&i%10===9,(i===Math.floor((cols-1)/2)||(row===0||i===col||i===0)));
+    if(sea)spawnRaft(pos,F,slot);else spawnHordeSoldier(pos,F,slot,units>=10&&i%10===9,i===Math.floor((cols-1)/2));
   }
   hw.left=Math.max(0,hw.left-n);
   pushFeed(sea?`적 상륙 보트 ${units}척 접근 (${n}명)`:`적 보병 대대 대형 돌격 (${n}명)`);
@@ -2718,6 +2720,7 @@ function frame(now){
   }
   for(const e of G.enemies)if(e.alive&&!e.remote)updateEnemy(e,dt);
   if(NET.on)netTick(dt);
+  mouseEdge(dt);
   if(G.horde&&G.state!=='menu')hordeTick(dt);
   for(const a of G.allies)if(a.alive&&!a.remote)(a.domain==='air'?airAI:squadAI)(a,dt);
   for(let i=G.sched.length-1;i>=0;i--){const s=G.sched[i];s.t-=dt;if(s.t<=0){G.sched.splice(i,1);s.fn();}}
@@ -2745,10 +2748,31 @@ function showOver(){
 }
 
 // ================= INPUT =================
-function tryLock(){if(isTouch)return;try{const r=glc.requestPointerLock&&glc.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}
+// 마우스 고정: 브라우저 포인터 잠금을 먼저 시도하고, 막혀 있으면(아티팩트 창 등) '가상 고정'으로 대신함
+// 가상 고정 = 버튼을 누르지 않아도 마우스 움직임으로 시점 회전 + 커서 숨김 + 커서가 화면 가장자리에 닿으면 그 방향으로 계속 회전
+const ML={failed:false,told:false,quiet:false,mx:-1,my:-1,inside:false};
+function lockFail(){ML.failed=true;if(!ML.told&&G.state==='play'){ML.told=true;pushFeed('이 화면에서는 브라우저가 마우스 고정을 막아서 가상 고정으로 바꿨어요');}}
+function tryLock(){if(isTouch||S.mouseLock!=='on'||ML.failed)return;try{if(!glc.requestPointerLock){lockFail();return;}const r=glc.requestPointerLock();if(r&&r.catch)r.catch(lockFail);}catch(e){lockFail();}}
+function virtLock(){return S.mouseLock==='on'&&!isTouch&&G.state==='play'&&!G.paused&&document.pointerLockElement!==glc;}
+function setMouseLock(v){
+  S.mouseLock=v?'on':'off';saveSettings();
+  if(v){tryLock();pushFeed('마우스 고정 켜짐 · L키로 해제');}
+  else{if(document.pointerLockElement===glc){ML.quiet=true;try{document.exitPointerLock();}catch(e){}}pushFeed('마우스 고정 꺼짐 · 마우스를 누른 채 끌어서 시점 이동 · L키로 다시 고정');}
+  updateCursor();
+}
+function updateCursor(){const c=virtLock()?'none':'';if(glc.style.cursor!==c)glc.style.cursor=c;}
+function mouseEdge(dt){
+  updateCursor();
+  if(!virtLock()||!ML.inside||ML.mx<0)return;
+  const nx=(ML.mx-innerWidth/2)/(innerWidth/2),ny=(ML.my-innerHeight/2)/(innerHeight/2),z=.86;
+  const ex=Math.abs(nx)>z?Math.sign(nx)*Math.min(1,(Math.abs(nx)-z)/(1-z)):0,ey=Math.abs(ny)>z?Math.sign(ny)*Math.min(1,(Math.abs(ny)-z)/(1-z)):0;
+  if(ex||ey){const k=G.zoom?.35:1;G.camYaw-=ex*2.4*k*dt;G.camPitch-=ey*1.3*k*dt;clampPitch();}
+}
 let hadLock=false;
-document.addEventListener('pointerlockchange',()=>{const l=document.pointerLockElement===glc;if(l)hadLock=true;else if(hadLock&&G.state==='play'&&!G.paused)setPause(true);});
-function setPause(v){if(G.state!=='play'&&v)return;G.paused=v;$('#pause').hidden=!v;fireHeld=false;if(!v){tryLock();last=performance.now();}}
+document.addEventListener('pointerlockchange',()=>{const l=document.pointerLockElement===glc;if(l)hadLock=true;else if(ML.quiet)ML.quiet=false;else if(hadLock&&G.state==='play'&&!G.paused)setPause(true);updateCursor();});
+document.addEventListener('pointerlockerror',lockFail);
+document.documentElement.addEventListener('mouseleave',()=>{ML.inside=false;});
+function setPause(v){if(G.state!=='play'&&v)return;G.paused=v;$('#pause').hidden=!v;fireHeld=false;if(!v){tryLock();last=performance.now();}updateCursor();}
 addEventListener('keydown',e=>{
   if(e.target&&e.target.tagName==='INPUT')return;
   keys[e.code]=true;
@@ -2762,6 +2786,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyV')toggleCrouch();
   if(e.code==='KeyG'&&G.player&&G.player.cls==='infantry'&&G.player.T.squad){S.squadMove=S.squadMove==='free'?'follow':'free';saveSettings();pushFeed(S.squadMove==='free'?'분대원 자유 이동: 적에게 직접 진격':'분대원 이동: 나를 따라오기');for(const a of G.allies)a.ftgt=null;}
   if(e.code==='Space'&&G.player){e.preventDefault();if(!e.repeat)useSkill(G.player.si);}
+  if(e.code==='KeyL'&&!e.repeat){setMouseLock(S.mouseLock!=='on');return;}
   if(e.code==='KeyC'){G.camScale=G.camScale===1?1.6:G.camScale===1.6?.75:1;}
 });
 addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -2770,9 +2795,10 @@ glc.addEventListener('mousedown',e=>{if(G.state!=='play')return;if(G.paused){set
 addEventListener('mouseup',e=>{if(e.button===0)fireHeld=false;if(e.button===2)G.zoom=false;});
 glc.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('mousemove',e=>{
+  ML.mx=e.clientX;ML.my=e.clientY;ML.inside=true;
   if(G.state!=='play'||G.paused)return;
   const locked=document.pointerLockElement===glc;
-  if(!locked&&!e.buttons)return;
+  if(!locked&&!e.buttons&&!virtLock())return;
   const sens=G.zoom?(G.player&&G.player.T.scope?.00035:.0011):.0022;
   G.camYaw-=(e.movementX||0)*sens;G.camPitch-=(e.movementY||0)*sens;clampPitch();
 });
@@ -2860,6 +2886,7 @@ function renderMenu(){
    if(vs){if(S.foeVar!=='random'&&!vs[S.foeVar])S.foeVar='random';const opts={random:{name:'랜덤'}};for(const k in vs)opts[k]={name:vs[k]};seg($('#optFoeVar'),opts,'foeVar');}}
   if(!RELOADS[S.reload])S.reload='auto';
   seg($('#optReload'),RELOADS,'reload');
+  if(!MOUSELOCKS[S.mouseLock])S.mouseLock='on';seg($('#optMouse'),MOUSELOCKS,'mouseLock',()=>saveSettings());
   if(!MODES[S.mode])S.mode='wave';
   seg($('#optMode'),MODES,'mode',()=>{renderMenu();lobbyPresence();});
   $('#pvpBox').hidden=S.mode!=='pvp';
