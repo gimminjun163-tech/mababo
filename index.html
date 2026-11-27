@@ -123,6 +123,13 @@ details.keys b{color:var(--hud);font-weight:500}
 #banner small{display:block;font-family:var(--fb);font-weight:500;font-size:clamp(14px,2vw,18px);color:var(--hud);margin-top:8px}
 #warn{position:absolute;left:0;right:0;top:calc(64px + env(safe-area-inset-top,0px));text-align:center;font-family:var(--fb);font-weight:700;font-size:16px;color:var(--red);letter-spacing:.1em;text-shadow:0 0 10px rgba(0,0,0,.8)}
 #board{position:absolute;left:calc(14px + env(safe-area-inset-left,0px));top:calc(132px + env(safe-area-inset-top,0px));padding:6px 10px;display:grid;gap:2px;min-width:170px;font-size:12px}
+#lootToast{position:absolute;left:50%;top:66%;transform:translate(-50%,8px);min-width:260px;max-width:min(420px,90vw);padding:10px 18px 12px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s,transform .25s;border-left:4px solid var(--amber)}
+#lootToast.show{opacity:1;transform:translate(-50%,0)}
+#lootToast small{display:block;font-size:12px;color:var(--dim);letter-spacing:.04em}
+#lootToast b{display:block;font-size:22px;margin:2px 0;color:var(--amber)}
+#lootToast span{font-size:13px}
+#lootToast.heal{border-left-color:var(--good)}#lootToast.heal b{color:var(--good)}
+#lootToast.ammo{border-left-color:var(--ally)}#lootToast.ammo b{color:var(--ally)}
 #board .bh{color:var(--dim);font-family:var(--fb);font-size:11px;letter-spacing:.06em}
 #board .br{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:6px;align-items:center;font-variant-numeric:tabular-nums}
 #board .br i{width:8px;height:8px;border-radius:50%;display:block;background:var(--dim)}
@@ -165,17 +172,60 @@ details.keys b{color:var(--hud);font-weight:500}
 }
 /* touch */
 #touch{position:fixed;inset:0;pointer-events:none;z-index:6}
-#touch button{pointer-events:auto;appearance:none;position:absolute;border:2px solid var(--amber);color:var(--amber);background:rgba(243,178,58,.16);font-family:var(--fd)}
+#touch button{pointer-events:auto;appearance:none;position:absolute;border:2px solid var(--amber);color:var(--amber);background:rgba(18,20,14,.55);font-family:var(--fd);text-shadow:0 1px 2px rgba(0,0,0,.8);touch-action:none;-webkit-user-select:none;user-select:none}
 #tFire{right:calc(96px + env(safe-area-inset-right,0px));bottom:calc(88px + env(safe-area-inset-bottom,0px));width:86px;height:86px;border-radius:50%;font-size:18px}
 #tZoom{right:calc(190px + env(safe-area-inset-right,0px));bottom:calc(100px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;font-size:13px}
 #tUp,#tDown{left:calc(16px + env(safe-area-inset-left,0px));width:58px;height:46px;font-size:13px}
 #tUp{bottom:calc(170px + env(safe-area-inset-bottom,0px))}#tDown{bottom:calc(116px + env(safe-area-inset-bottom,0px))}
 #tHide{right:calc(190px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;font-size:13px}
+#tJump{right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(176px + env(safe-area-inset-bottom,0px));width:64px;height:64px;border-radius:50%;font-size:15px}
+#tDash{right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));width:64px;height:64px;border-radius:50%;font-size:15px}
+#tReload{right:calc(100px + env(safe-area-inset-right,0px));bottom:calc(186px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;font-size:13px}
+#tWeap{right:calc(190px + env(safe-area-inset-right,0px));bottom:calc(166px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;font-size:13px}
+#tBag{right:calc(154px + env(safe-area-inset-right,0px));top:calc(182px + env(safe-area-inset-top,0px));width:60px;height:34px;font-size:13px}
+.touchui #tBag{top:calc(182px + env(safe-area-inset-top,0px))}
+#tView{right:calc(84px + env(safe-area-inset-right,0px));top:calc(182px + env(safe-area-inset-top,0px));width:60px;height:34px;font-size:13px}
+#tLoot{left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));padding:0 22px;height:52px;border-radius:26px;font-size:17px;white-space:nowrap;background:rgba(60,44,10,.8)!important;animation:lootPulse 1s ease-in-out infinite alternate}
+@keyframes lootPulse{from{box-shadow:0 0 0 0 rgba(243,178,58,.5)}to{box-shadow:0 0 0 8px rgba(243,178,58,0)}}
+#touch button:active,#touch button.on{background:rgba(243,178,58,.45)}
+.touchui #skills{flex-direction:row;top:auto;right:auto;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(112px + env(safe-area-inset-bottom,0px));transform:none}
+.touchui .sk{width:54px;height:54px}
+.touchui #weapons{bottom:calc(6px + env(safe-area-inset-bottom,0px));gap:4px}
+.touchui .slot{width:70px;padding:4px 6px 6px}.touchui .slot .s{display:none}.touchui .slot .n{font-size:11px}
+.touchui #tPause{left:auto;right:calc(14px + env(safe-area-inset-right,0px));top:calc(182px + env(safe-area-inset-top,0px));transform:none;width:60px}
+@media (max-height:500px){
+  .touchui #radar{width:110px;height:110px}
+  .touchui #tPause,.touchui #tView,.touchui #tBag{top:calc(132px + env(safe-area-inset-top,0px))}
+  #tFire{width:76px;height:76px;right:calc(88px + env(safe-area-inset-right,0px));bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+  #tDash{width:56px;height:56px;bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+  #tJump{width:56px;height:56px;bottom:calc(134px + env(safe-area-inset-bottom,0px))}
+  #tReload{width:48px;height:48px;right:calc(98px + env(safe-area-inset-right,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+  #tZoom{width:48px;height:48px;right:calc(174px + env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  #tHide{width:48px;height:48px;right:calc(174px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+  #tWeap{width:48px;height:48px;right:calc(174px + env(safe-area-inset-right,0px));bottom:calc(152px + env(safe-area-inset-bottom,0px))}
+  #tLoot{bottom:calc(120px + env(safe-area-inset-bottom,0px));height:44px;font-size:15px}
+  .touchui .sk{width:48px;height:48px}
+}
+@media (max-width:520px){
+  .touchui #hpbox{display:none}
+  .touchui #skills{bottom:calc(250px + env(safe-area-inset-bottom,0px))}
+  .touchui #tPause,.touchui #tView,.touchui #tBag{top:calc(140px + env(safe-area-inset-top,0px))}
+  #tLoot{bottom:calc(270px + env(safe-area-inset-bottom,0px))}
+  .touchui #skills{bottom:calc(320px + env(safe-area-inset-bottom,0px))}
+}
 #tPause{left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));width:64px;height:34px;font-size:13px}
 
 /* overlays */
 .dlg{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(6,9,8,.72);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .dlg .box{width:min(440px,100%);background:var(--panel2);border:1px solid var(--line);padding:22px;display:grid;gap:12px;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px))}
+.dlg .abox{width:min(620px,100%);max-height:88vh;overflow:auto}
+#armList{display:grid;gap:6px}#armList h4{margin:8px 0 2px;font-size:13px;color:var(--dim);font-weight:600;letter-spacing:.04em}
+.arow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);padding:7px 10px}
+.arow b{display:block;font-size:15px}.arow small{display:block;font-size:12px;color:var(--dim);font-family:var(--fm)}
+.arow b.lv1{color:#9fdcff}.arow b.lv2{color:#d6a8ff}.arow b.lv3{color:var(--amber)}
+.arow.up{border-color:var(--amber)}.abtn{display:flex;gap:6px}.abtn button{appearance:none;padding:7px 12px;font-size:13px;cursor:pointer;background:var(--panel2);border:1px solid var(--line);color:var(--hud)}
+.abtn button.go{background:var(--amber);color:#1b1a12;border-color:var(--amber);font-weight:700}.abtn button.ghost{opacity:.8}
+.aempty{font-size:13px;color:var(--dim)!important}#armMsg{font-weight:700;min-height:1.4em}#armMsg.ok{color:var(--good)}#armMsg.bad{color:var(--red)}
 .dlg h3{font-family:var(--fd);font-weight:400;font-size:36px;margin:0;color:var(--amber)}
 .dlg p{margin:0;line-height:1.6;color:var(--hud)}
 .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;font-family:var(--fm)}
@@ -193,6 +243,7 @@ details.keys b{color:var(--hud);font-weight:500}
 <div id="hud" hidden>
   <div id="info" class="pn"><div class="w" id="hWave">웨이브 1</div><div class="r">무한 모드 · 적 강화 <b id="hLvl">+0%</b></div><div class="r">남은 적 <b id="hLeft">0</b></div><div class="r">점수 <b id="hScore">0</b></div><div class="r">킬 <b id="hKills">0</b><span id="hDeaths"></span></div></div>
   <div id="board" class="pn" hidden></div>
+  <div id="lootToast" class="pn" aria-live="polite"><small></small><b></b><span></span></div>
   <canvas id="radar" width="340" height="340"></canvas>
   <div id="feed"></div>
   <div id="hpTop"><div class="lbl"><span>내 체력</span><b id="hHp">0 / 0</b><span class="pc" id="hPct">100%</span></div><div class="track"><i class="gh" id="hpGhost"></i><i class="fl" id="hpfill"></i><i class="tk"></i></div></div>
@@ -210,6 +261,13 @@ details.keys b{color:var(--hud);font-weight:500}
   <button id="tUp" type="button">상승</button>
   <button id="tDown" type="button">하강</button>
   <button id="tPause" type="button">정지</button>
+  <button id="tJump" type="button">점프</button>
+  <button id="tDash" type="button">대시</button>
+  <button id="tReload" type="button">장전</button>
+  <button id="tWeap" type="button">무기</button>
+  <button id="tView" type="button">시점</button>
+  <button id="tBag" type="button">가방</button>
+  <button id="tLoot" type="button" hidden>상자 열기</button>
 </div>
 
 <div id="menu">
@@ -256,6 +314,7 @@ details.keys b{color:var(--hud);font-weight:500}
         <div class="optrow"><span class="lab">마우스 고정 (게임 중 L키로 전환)</span><div id="optMouse" class="seg"></div></div>
         <div class="optrow"><span class="lab">시점 (게임 중 H키로 전환)</span><div id="optView" class="seg"></div></div>
         <div class="optrow"><span class="lab">잠복 추적</span><div id="optHideTrack" class="seg"></div></div>
+        <div class="optrow"><span class="lab">모바일 터치 버튼</span><div id="optTouch" class="seg"></div></div>
         <div class="optrow"><span class="lab">적 체력 배율</span><div id="optHpFoe" class="seg"></div></div>
         <div class="optrow"><span class="lab">내 체력 배율 (온라인 대전 제외)</span><div id="optHpMe" class="seg"></div></div>
         <div class="optrow" id="rowSquad"><span class="lab">보병 편성</span><div id="optSquad" class="seg"></div></div>
@@ -269,14 +328,15 @@ details.keys b{color:var(--hud);font-weight:500}
           <p><b>보병</b> WASD로 보는 방향 기준 이동, V 대시(달리기), Shift 잠복(앉기), 스페이스 점프(창문이나 옥상에서 뛰어내릴 수 있어요, 높으면 낙하 피해), 스킬은 Q/E/R, 우클릭 조준(저격수는 조준경). 분대원이 따라오며 가까운 적을 쏩니다. 소총탄은 장갑 차량에 거의 안 들어가니 대전차 로켓이나 대물 저격총을 쓰세요. 적 병사의 머리를 맞히면 헤드샷(피해 5배·적 병사 즉사, 점수 2배)이고, G키로 분대원을 나를 따라오게 할지 자유롭게 움직이게 할지 바꿀 수 있어요. V키로 엎드리면 집 안이나 나무·건물 옆에서 잠복해 적에게 들키지 않고, 쏘면 잠시 발각됩니다. 집 안에서는 창문 너머로 쏘 수 있어요.</p>
           <p><b>헬기</b> WASD로 보는 방향 기준 전후좌우 이동, Shift 상승, Z 하강(손을 떼면 고도 유지). 기수 아래 포탑이 조준선을 따라가고, 로켓은 조준선 쪽으로 2발씩 날아가요. 지형과 건물 뒤에 숨었다 튀어나와 공격하세요.</p>
           <p><b>폭격기</b> 폭탄을 들면 땅에 노란 탄착 예상 지점이 표시됩니다. 집속탄은 땅 가까이에서 작은 폭탄 12개로 터져요. 폭발은 나무와 집도 무너뜨리고, 전차는 나무를 밀고 집을 들이받아 부수며 지나갑니다.</p>
-          <p><b>공통</b> 1~4 또는 휠로 무기 선택, Q/E/R 스킬 바로 사용, Tab 스킬 선택, 스페이스 선택된 스킬 사용, C 시점 거리, H 1인칭/3인칭, L 마우스 고정 켜기/끄기, X 건물 안 보급상자 열기, Esc 일시정지. 미사일은 목표를 조준선 가까이 두면 잠금됩니다. 미사일·폭탄을 다 쓰면 재장전합니다. 설정에서 자동 또는 수동을 고를 수 있고, F키(터치는 선택된 무기 칸을 한 번 더)로 언제든 직접 재장전할 수 있어요.</p>
-          <p><b>터치</b> 왼쪽 화면 드래그로 이동, 오른쪽 드래그로 조준, 발사 버튼을 누르고 있기</p>
+          <p><b>공통</b> 1~4 또는 휠로 무기 선택, Q/E/R 스킬 바로 사용, Tab 스킬 선택, 스페이스 선택된 스킬 사용, C 시점 거리, H 1인칭/3인칭, L 마우스 고정 켜기/끄기, X 건물 안 보급상자 열기, B 가방 · 총기 강화(같은 총 2개를 합쳐 최대 +30), Esc 일시정지. 미사일은 목표를 조준선 가까이 두면 잠금됩니다. 미사일·폭탄을 다 쓰면 재장전합니다. 설정에서 자동 또는 수동을 고를 수 있고, F키(터치는 선택된 무기 칸을 한 번 더)로 언제든 직접 재장전할 수 있어요.</p>
+          <p><b>터치</b> 왼쪽 화면 드래그로 이동, 오른쪽 드래그로 조준, 발사 버튼을 누르고 있기. 보병은 점프·대시(누르고 있기)·잠복 버튼, 상자 근처에서는 '상자 열기' 버튼이 떠요. 장전·무기 바꾸기·스킬·시점·확대 버튼도 있어요.</p>
         </details>
       </section>
     </div>
   </div>
 </div>
 
+<div id="armory" class="dlg" hidden><div class="box abox"><h3>가방 · 총기 강화</h3><div id="armList"></div><p id="armMsg"></p><div class="row2"><button class="go" id="armClose" type="button">닫기 (B)</button></div></div></div>
 <div id="pause" class="dlg" hidden><div class="box"><h3>일시정지</h3><p>화면을 클릭하거나 계속하기를 누르면 전투가 재개됩니다. L키로 마우스 고정을 켜고 끌 수 있어요.</p><div class="row2"><button class="go" id="resumeBtn" type="button">계속하기</button><button class="ghost" id="quitBtn" type="button">메뉴로</button></div></div></div>
 <div id="over" class="dlg" hidden><div class="box"><h3 id="oTitle">격파됨</h3><p id="oSub"></p><div class="stats"><div><small>도달 웨이브</small><b id="oWave">0</b></div><div><small>격파</small><b id="oKills">0</b></div><div><small>점수</small><b id="oScore">0</b></div></div><div class="row2"><button class="go" id="retryBtn" type="button">다시 출격</button><button class="ghost" id="menuBtn" type="button">설정 바꾸기</button></div></div></div>
 
@@ -325,8 +385,7 @@ const WEAPONS={
   amr:{name:'대물 저격총',sub:'저격 · 장갑 관통',kind:'bullet',speed:1400,dmg:220,cd:2.2,spread:.001,range:2000,ammo:5},
   grenade:{name:'수류탄',sub:'투척 · 범위 피해',kind:'shell',speed:30,dmg:170,blast:9,cd:1,grav:14,ammo:4},
   rpg:{name:'대전차 로켓',sub:'로켓 · 장갑 차량',kind:'shell',rocket:true,speed:170,dmg:420,blast:7,cd:1.5,grav:3,ammo:3},
-  glock:{name:'글록 17',sub:'권총 · 17발',kind:'bullet',speed:600,dmg:16,cd:.16,spread:.008,range:350,ammo:17,soft:true},
-  ak:{name:'AK-47',sub:'돌격소총 · 30발 · 강한 한 발',kind:'bullet',speed:850,dmg:19,cd:.11,spread:.009,range:850,ammo:30,soft:true},
+  pistol:{name:'권총',sub:'권총 · 17발',kind:'bullet',speed:600,dmg:15,cd:.17,spread:.009,range:350,ammo:15,soft:true},
   fist:{name:'주먹',sub:'근접 · 무한',kind:'melee',dmg:28,cd:.42,reach:1.8,ammo:Infinity},
   knife:{name:'단검',sub:'근접 · 등 뒤에서 2배',kind:'melee',dmg:60,cd:.55,reach:2.1,ammo:Infinity,backstab:true},
   shotgun:{name:'산탄총',sub:'근거리 · 산탄 8발',kind:'bullet',speed:520,dmg:13,cd:.85,spread:.045,range:140,ammo:8,soft:true,pellets:8},
@@ -380,9 +439,9 @@ const CLASSES={
     weapons:['rifle','grenade','rpg','manpads'],skills:['medic','smoke','artillery'],
     svg:'<circle cx="30" cy="10" r="4"/><path d="M25 15h10l2 10h-3l-1 12h-3l-1-8-1 8h-3l-1-12h-2z"/><circle cx="60" cy="7" r="5"/><path d="M54 13h12l3 12h-4l-1 13h-4l-1-9-1 9h-4l-1-13h-3z"/><path d="M63 16h40v3H63z"/><circle cx="90" cy="10" r="4"/><path d="M85 15h10l2 10h-3l-1 12h-3l-1-8-1 8h-3l-1-12h-2z"/>',
     types:[
-      {id:'basic',name:'기본 보병',spec:'분대원 4명 · 글록 17 · AK-47 · 주먹 · 단검 · 수류탄 · 특기: 근접·권총',hp:200,speed:5.4,turn:1,scale:.35,squad:4,weapons:['glock','ak','fist','knife','grenade'],wmul:{knife:1.5,fist:1.4,glock:1.25},bars:[3,4,3]},
-      {id:'rifle',name:'소총 여단',spec:'분대원 5명 · 돌격소총 · 대전차 로켓 · 특기: 소총·수류탄',hp:220,speed:5.2,turn:1,scale:.35,squad:5,wmul:{rifle:1.25,ak:1.25,grenade:1.3,rpg:1.15},bars:[3,4,3]},
-      {id:'sniper',name:'저격수 부대',spec:'관측수 2명 · 저격소총 · 대물 저격총 · 대공미사일 · 특기: 저격총',hp:150,speed:5,turn:1,scale:.35,squad:2,scope:true,weapons:['sniper','amr','smg','manpads'],wmul:{sniper:1.3,amr:1.25,glock:1.15},bars:[2,4,5]},
+      {id:'basic',name:'기본 보병',spec:'분대원 4명 · 글록 17 · AK-47 · 주먹 · 단검 · 수류탄 · 특기: 근접·권총',hp:200,speed:5.4,turn:1,scale:.35,squad:4,weapons:['pistol:glock17','rifle:ak47','fist','knife','grenade'],wmul:{knife:1.5,fist:1.4,pistol:1.25},bars:[3,4,3]},
+      {id:'rifle',name:'소총 여단',spec:'분대원 5명 · 기본 돌격소총 · 대전차 로켓 · 특기: 소총·수류탄',hp:220,speed:5.2,turn:1,scale:.35,squad:5,wmul:{rifle:1.25,grenade:1.3,rpg:1.15},bars:[3,4,3]},
+      {id:'sniper',name:'저격수 부대',spec:'관측수 2명 · 저격소총 · 대물 저격총 · 대공미사일 · 특기: 저격총',hp:150,speed:5,turn:1,scale:.35,squad:2,scope:true,weapons:['sniper','amr','smg','manpads'],wmul:{sniper:1.3,amr:1.25,pistol:1.15},bars:[2,4,5]},
       {id:'lmg',name:'기관총 분대',spec:'분대원 3명 · 경기관총 · 대전차 로켓 · 대공미사일 · 특기: 기관총·산탄총',hp:280,speed:4.4,turn:1,scale:.35,squad:3,weapons:['lmg','grenade','rpg','manpads'],wmul:{lmg:1.3,shotgun:1.25,rpg:1.1},bars:[4,2,4]},
     ]},
   heli:{name:'헬기',desc:'낮게 정지 비행하며 기관포와 로켓, 미사일로 싸우는 회전익기. 지형 뒤에 숨었다 튀어나와 공격합니다.',domain:'air',
@@ -445,6 +504,7 @@ EK.inf={name:'적 보병',domain:'land',hp:45,speed:6.5,score:40,soldier:true};
 for(const k of ['tank','heavytank','apc','boat','bigship','ecarrier','battery','aa'])EK[k].armored=true;
 const RELOADS={auto:{name:'자동 재장전'},manual:{name:'수동 (F키)'}};
 const HPMULS={'1':{name:'×1'},'3':{name:'×3'},'5':{name:'×5'},'10':{name:'×10'}};
+const TOUCHUIS={auto:{name:'자동 (터치 기기)'},on:{name:'항상 보이기'},off:{name:'끄기'}};
 const HIDETRACK={off:{name:'끄기'},on:{name:'켜기 (숨어도 천천히 추적)'}};
 const VIEWS={third:{name:'3인칭'},first:{name:'1인칭'}};
 const MOUSELOCKS={on:{name:'켜기 (클릭하면 고정)'},off:{name:'끄기 (누른 채 끌어서 시점)'}};
@@ -531,7 +591,7 @@ const EV={
 const MODES={wave:{name:'웨이브 (AI 적)'},horde:{name:'인해전술 (무한 보병 돌격)'},pvp:{name:'온라인 대전 (PvP)'}};
 const PVPTEAMS={ffa:{name:'개인전 (1:1:1…)'},team:{name:'팀전 (빨강 vs 파랑)'}};
 const TEAMPICK={auto:{name:'자동'},red:{name:'빨강'},blue:{name:'파랑'}};
-const S={hideTrack:'off',view:'third',hpFoe:'1',hpMe:'1',bldg:'off',mouseLock:'on',cls:'ship',type:1,terrain:'coast',time:'day',size:'normal',diff:'normal',reload:'auto',paint:'std',wave:'normal',squadMode:'squad',squadMove:'follow',foeCls:'mine',foeVar:'random',mode:'wave',pvpCode:'main',pvpTeam:'ffa',teamPick:'auto',hordeSize:'big',model:'base',nick:'',seed:(Math.random()*1e6)|0};
+const S={touchUI:'auto',hideTrack:'off',view:'third',hpFoe:'1',hpMe:'1',bldg:'off',mouseLock:'on',cls:'ship',type:1,terrain:'coast',time:'day',size:'normal',diff:'normal',reload:'auto',paint:'std',wave:'normal',squadMode:'squad',squadMove:'follow',foeCls:'mine',foeVar:'random',mode:'wave',pvpCode:'main',pvpTeam:'ffa',teamPick:'auto',hordeSize:'big',model:'base',nick:'',seed:(Math.random()*1e6)|0};
 try{const s=JSON.parse(localStorage.getItem('steelfront.settings')||'null');if(s&&CLASSES[s.cls]&&TERRAINS[s.terrain])Object.assign(S,s,{seed:(Math.random()*1e6)|0});}catch(e){}
 function saveSettings(){try{localStorage.setItem('steelfront.settings',JSON.stringify(S));}catch(e){}}
 function getBest(){try{return JSON.parse(localStorage.getItem('steelfront.best')||'{}');}catch(e){return {};}}
@@ -1175,12 +1235,12 @@ function greedy(a,gw,gd,code){const used=new Uint8Array(gw*gd),out=[];
   return out;}
 // ---- 건물 종류 · 보급상자 ----
 const MBTYPES={
-  apt:{name:'아파트',col:[0xcfc6b4,0xc2b8a4,0xd6cbb6],band:0x8a6e52,floor:0x86684a,crate:0xb5752e,loot:{heal30:.45,glock:.25,ammo:.2,grenade:.1}},
+  apt:{name:'아파트',col:[0xcfc6b4,0xc2b8a4,0xd6cbb6],band:0x8a6e52,floor:0x86684a,crate:0xb5752e,loot:{heal30:.45,pistol:.25,ammo:.2,grenade:.1}},
   hospital:{name:'병원',col:[0xe8e6e0],band:0xc23b33,floor:0xaab0aa,crate:0x2f7d4f,loot:{heal100:.4,heal50:.6}},
-  police:{name:'경찰서',col:[0xb9bfc6],band:0x2f4a78,floor:0x8b8f94,crate:0x34507e,loot:{glock:.3,smg:.25,shotgun:.25,ammo:.2}},
-  armory:{name:'군 초소',col:[0x8f9576,0x9a9a80],band:0x4a5236,floor:0x7a7d6a,crate:0x55633e,loot:{ak:.2,rifle:.1,lmg:.12,rpg:.14,grenade:.14,sniper:.1,ammo:.2}},
-  warehouse:{name:'창고',col:[0xa48e7a,0x9aa2a6],band:0x6b5a46,floor:0x8d8a84,crate:0x8a6a3e,loot:{grenade:.3,rpg:.2,ammo:.3,knife:.2}},
-  office:{name:'사무실',col:[0xaeb4ad,0x9ea3a3,0xb3a28c],band:0x3d5a63,floor:0x8e8a82,crate:0x2d6e7e,loot:{heal30:.35,glock:.2,knife:.2,ammo:.25}},
+  police:{name:'경찰서',col:[0xb9bfc6],band:0x2f4a78,floor:0x8b8f94,crate:0x34507e,loot:{pistol:.3,smg:.25,shotgun:.25,ammo:.2}},
+  armory:{name:'군 초소',col:[0x8f9576,0x9a9a80],band:0x4a5236,floor:0x7a7d6a,crate:0x55633e,loot:{rifle:.26,lmg:.12,rpg:.12,grenade:.12,sniper:.1,amr:.05,smg:.05,ammo:.18}},
+  warehouse:{name:'창고',col:[0xa48e7a,0x9aa2a6],band:0x6b5a46,floor:0x8d8a84,crate:0x8a6a3e,loot:{grenade:.25,rpg:.15,ammo:.25,knife:.15,shotgun:.1,rifle:.1}},
+  office:{name:'사무실',col:[0xaeb4ad,0x9ea3a3,0xb3a28c],band:0x3d5a63,floor:0x8e8a82,crate:0x2d6e7e,loot:{heal30:.35,pistol:.2,knife:.2,ammo:.25}},
 };
 const ITEMNAMES={heal30:'구급상자',heal50:'의료 키트',heal100:'수술 키트',ammo:'탄약 상자'};
 function wPick(W){const ks=Object.keys(W);let tot=0;for(const k of ks)tot+=W[k];let r=Math.random()*tot;for(const k of ks){r-=W[k];if(r<=0)return k;}return ks[0];}
@@ -1295,39 +1355,174 @@ function buildMBMesh(){
   const m=bb.mesh();m.frustumCulled=false;const grp=new THREE.Group();grp.add(m);
   if(gb.p.length){const g=gb.mesh();g.material=new THREE.MeshPhongMaterial({color:0xa9cfe0,transparent:true,opacity:.3,shininess:90,specular:0x99aabb,depthWrite:false});g.frustumCulled=false;grp.add(g);}
   grp.add(signs);
-  // 보급상자 (열면 모양이 바뀜)
-  const all=[];for(const b of MB.list)for(const L of b.loot){L.idx=all.length;all.push([b,L]);}
-  if(all.length){const lg=new THREE.BoxGeometry(.92,.9,.92);lg.translate(0,.45,0);const lm=new THREE.InstancedMesh(lg,new THREE.MeshPhongMaterial({color:0xffffff,flatShading:true,shininess:10}),all.length);
-    const band=new THREE.InstancedMesh(new THREE.BoxGeometry(.96,.12,.96),new THREE.MeshPhongMaterial({color:0xffffff,flatShading:true}),all.length);
-    all.forEach(([b,L],k)=>{lootMatrix(b,L,lm,band,k);});lm.frustumCulled=band.frustumCulled=false;grp.add(lm);grp.add(band);MB.lootMesh=lm;MB.lootBand=band;}
-  else{MB.lootMesh=null;MB.lootBand=null;}
+  // 보급상자 (건물 종류별 모양, 열면 뚜껑이 열리고 내용물이 보임)
+  MB.lootMeshes={};const byS={};
+  for(const b of MB.list)for(const L of b.loot){L.style=CRATE_STYLE[b.type]||'wood';(byS[L.style]=byS[L.style]||[]).push([b,L]);}
+  for(const st in byS){const arr=byS[st];const mk=o=>{const m=new THREE.InstancedMesh(getCrateGeo(st,o),crateMatFor(),arr.length);m.frustumCulled=false;grp.add(m);return m;};
+    const M2={closed:mk(false),open:mk(true)};MB.lootMeshes[st]=M2;arr.forEach(([b,L],k)=>{L.si=k;lootMatrix(b,L);});}
   return grp;
 }
-function lootMatrix(b,L,lm,band,k){
-  const T=MBTYPES[b.type],x=b.x0+(L.i+1)*MB.CS,z=b.z0+(L.j+1)*MB.CS,y=b.base+L.f*MB.FH,m4=new THREE.Matrix4(),c=new THREE.Color(T.crate);
-  m4.compose(new V3(x,y,z),new Q4(),new V3(1,L.open?.35:1,1));lm.setMatrixAt(k,m4);if(L.open)c.multiplyScalar(.45);lm.setColorAt(k,c);
-  m4.compose(new V3(x,y+(L.open?.3:.62),z),new Q4(),new V3(1,1,1));band.setMatrixAt(k,m4);band.setColorAt(k,new THREE.Color(L.open?0x333333:(b.type==='hospital'?0xd8322c:0xe0b84a)));
-  lm.instanceMatrix.needsUpdate=true;band.instanceMatrix.needsUpdate=true;if(lm.instanceColor)lm.instanceColor.needsUpdate=true;if(band.instanceColor)band.instanceColor.needsUpdate=true;
+function lootMatrix(b,L){
+  const M2=MB.lootMeshes&&MB.lootMeshes[L.style];if(!M2)return;
+  const x=b.x0+(L.i+1)*MB.CS,z=b.z0+(L.j+1)*MB.CS,y=b.base+L.f*MB.FH,rot=((L.i*7+L.j*3+L.f)%4)*Math.PI/2+(((L.i*13+L.j*5)%7)-3)*.04;
+  const q=new Q4().setFromAxisAngle(UP,rot),m4=new THREE.Matrix4();
+  m4.compose(new V3(x,y,z),q,new V3(1,1,1).multiplyScalar(L.open?1e-4:1));M2.closed.setMatrixAt(L.si,m4);
+  m4.compose(new V3(x,y,z),q,new V3(1,1,1).multiplyScalar(L.open?1:1e-4));M2.open.setMatrixAt(L.si,m4);
+  M2.closed.instanceMatrix.needsUpdate=true;M2.open.instanceMatrix.needsUpdate=true;
 }
+// ---------- 보급상자 모델 (종류별 실제 모양 · 닫힘/열림) ----------
+const CRATE_STYLE={armory:'mil',warehouse:'wood',hospital:'med',police:'case',apt:'card',office:'card'};
+const _crateGeo={};
+function crateGeo(style,open){
+  const bb=new BoxBatch(),B=(x0,y0,z0,x1,y1,z1,c)=>bb.box(x0,y0,z0,x1,y1,z1,c);
+  const R=(cx,cy,cz,sx,sy,sz,rx,ry,rz,c)=>bb.add(new THREE.Matrix4().compose(new V3(cx,cy,cz),new Q4().setFromEuler(new THREE.Euler(rx,ry,rz,'YXZ')),new V3(sx,sy,sz)),c);
+  const pallet=(c)=>{for(const z of [-.4,0,.4])B(-.47,0,z-.06,.47,.1,z+.06,c);for(const x of [-.42,-.21,0,.21,.42])B(x-.08,.1,-.47,x+.08,.13,.47,c);};
+  if(style==='mil'||style==='wood'){
+    // 군용 탄약/무기 상자: 팔레트 위 긴 나무 상자, 모서리 철판, 밧줄 손잡이, 노란 스텐실 띠
+    const wd=style==='mil'?0x4f5a33:0x8a6a3e,dk=style==='mil'?0x3a4326:0x5e4628,mt=0x5b5d58,st=style==='mil'?0xd9c25a:0x2d2a26;
+    pallet(0x6e5a3e);const y0=.13,h=.5,x0=-.46,x1=.46,z0=-.32,z1=.32;
+    if(!open){B(x0,y0,z0,x1,y0+h,z1,wd);B(x0-.01,y0+h,z0-.01,x1+.01,y0+h+.06,z1+.01,dk);}
+    else{B(x0,y0,z0,x1,y0+.04,z1,dk);B(x0,y0,z0,x1,y0+h,z0+.04,wd);B(x0,y0,z1-.04,x1,y0+h,z1,wd);B(x0,y0,z0,x0+.04,y0+h,z1,wd);B(x1-.04,y0,z0,x1,y0+h,z1,wd);
+      if(style==='mil'){for(const z of [-.18,0,.18]){B(-.4,y0+.06,z-.05,.4,y0+.14,z+.05,0x2b2c29);B(.12,y0+.04,z-.03,.3,y0+.2,z+.02,0x2b2c29);}}
+      else{for(const [x,z] of [[-.22,-.12],[.18,-.1],[-.2,.14],[.2,.15]])B(x-.15,y0+.04,z-.1,x+.15,y0+.26,z+.1,0x4f5a33);}
+      R(.0,y0+h+.28,z1+.1,.94,.06,.68,-1.25,0,0,dk);}
+    for(const x of [x0+.12,x1-.12])B(x-.04,y0+.04,z0-.015,x+.04,y0+h-.02,z0,dk);
+    for(const x of [x0+.12,x1-.12])B(x-.04,y0+.04,z1,x+.04,y0+h-.02,z1+.015,dk);
+    for(const [x,z] of [[x0,z0],[x1,z0],[x0,z1],[x1,z1]]){B(x-.02,y0,z-.02,x+.02,y0+.1,z+.02,mt);B(x-.02,y0+h-.1,z-.02,x+.02,y0+h,z+.02,mt);}
+    B(-.2,y0+.2,z0-.018,.2,y0+.28,z0-.002,st);B(-.12,y0+.32,z0-.018,.12,y0+.36,z0-.002,st);
+    for(const x of [x0,x1]){const sx=x<0?-1:1;B(x+sx*.005,y0+.24,-.09,x+sx*.04,y0+.27,.09,0x9a8a62);}
+  }else if(style==='med'){
+    // 구급 상자: 흰 하드케이스 두 개(큰 것 위에 작은 것), 빨간 십자, 손잡이, 걸쇠
+    const wh=0xd8dcd6,gr=0x7c8a80,rd=0xc0302a;
+    B(-.44,0,-.3,.44,.42,.3,wh);B(-.45,.2,-.31,.45,.23,.31,gr);
+    B(-.07,.12,-.312,.07,.34,-.3,rd);B(-.16,.19,-.312,.16,.27,-.3,rd);
+    for(const x of [-.3,.3])B(x-.04,.17,-.32,x+.04,.27,-.3,0x9aa09a);
+    if(!open){B(-.3,.42,-.2,.3,.62,.2,0xe8eae4);B(-.04,.5,-.205,.04,.6,-.2,rd);B(-.09,.53,-.205,.09,.57,-.2,rd);B(-.1,.62,-.03,.1,.66,.03,0x3b3d3a);B(-.06,.66,-.03,.06,.69,.03,0x3b3d3a);
+      B(-.07,.62,-.11,.07,.625,.11,rd);B(-.11,.62,-.07,.11,.625,.07,rd);}
+    else{B(-.3,.42,-.2,.3,.47,.2,0xe8eae4);B(-.28,.47,-.18,.28,.5,.18,0xb43a32);for(const [x,z] of [[-.15,-.08],[.12,-.06],[0,.09]])B(x-.07,.5,z-.05,x+.07,.56,z+.05,0xf2f2ee);
+      R(0,.58,.27,.6,.14,.04,.25,0,0,0xe8eae4);R(0,.58,.25,.18,.04,.02,.25,0,0,rd);}
+  }else if(style==='case'){
+    // 경찰 장비: 바퀴 달린 받침대 위 검은 총기 케이스, 파란 띠, 은색 걸쇠
+    const bk=0x22252a,bl=0x2f4f8a,sv=0xb8bcc2;
+    B(-.46,0,-.3,.46,.06,.3,0x55585c);for(const x of [-.38,.38])for(const z of [-.24,.24])B(x-.03,-.0,z-.03,x+.03,.03,z+.03,0x1a1a1a);
+    B(-.44,.06,-.26,.44,.3,.26,bk);B(-.445,.17,-.265,.445,.2,.265,bl);
+    for(const x of [-.28,0,.28])B(x-.035,.14,-.27,x+.035,.22,-.26,sv);
+    if(!open){B(-.44,.3,-.26,.44,.44,.26,bk);B(-.12,.44,-.03,.12,.47,.03,0x111111);B(-.3,.36,-.265,.3,.38,-.26,bl);}
+    else{B(-.42,.3,-.24,.42,.31,.24,0x55585c);B(-.36,.31,-.06,.3,.36,.05,0x111111);B(.12,.31,-.12,.2,.36,.02,0x111111);B(-.36,.31,.1,-.05,.35,.16,0x111111);
+      R(0,.5,.33,.88,.14,.42,1.25,0,0,bk);}
+  }else{
+    // 생활 물자: 테이프 붙인 골판지 상자 더미
+    const kr=0xa47f4f,kd=0x8a6a40,tp=0xcfb98a;
+    B(-.46,0,-.3,.06,.36,.3,kr);B(-.465,.355,-.02,.065,.362,.02,tp);B(-.465,.15,-.302,.065,.2,-.298,tp);
+    B(.08,0,-.28,.46,.3,.2,kd);B(.075,.298,-.06,.465,.305,-.02,tp);
+    if(!open){B(-.4,.36,-.24,.02,.62,.22,kr);B(-.405,.615,-.03,.025,.622,.01,tp);B(-.405,.42,-.242,.025,.46,-.238,0x3b3b3b);}
+    else{B(-.4,.36,-.24,.02,.56,.22,kd);B(-.38,.56,-.22,0,.565,.2,0x5a4630);
+      R(-.19,.6,-.29,.42,.14,.01,-.7,0,0,kr);R(-.19,.6,.27,.42,.14,.01,.7,0,0,kr);R(-.45,.6,-.01,.01,.14,.44,0,0,.7,kr);R(.07,.6,-.01,.01,.14,.44,0,0,-.7,kr);
+      B(-.3,.56,-.12,-.12,.66,.02,0xd8dcd6);B(-.08,.56,0,.0,.7,.12,0x2b2c29);}
+  }
+  return bb.mesh().geometry;
+}
+function getCrateGeo(style,open){const k=style+(open?1:0);return _crateGeo[k]||(_crateGeo[k]=crateGeo(style,open));}
+function crateMatFor(){return MB.crateMat||(MB.crateMat=new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,shininess:8}));}
 function lootTick(){
   G.lootNear=null;const p=G.player;if(!p||!p.alive||p.cls!=='infantry'||!p.inBld)return;const b=p.inBld;let best=null,bd=2.2;
   for(const L of b.loot){if(L.open)continue;const x=b.x0+(L.i+1)*MB.CS,z=b.z0+(L.j+1)*MB.CS,y=b.base+L.f*MB.FH;if(Math.abs(y-p.pos.y)>1.2)continue;const d=Math.hypot(x-p.pos.x,z-p.pos.z);if(d<bd){bd=d;best=L;}}
   if(best)G.lootNear={b,L:best,label:`${MBTYPES[b.type].name} 보급상자 열기`};
 }
+function showLootToast(kind,name,sub,where){
+  const el=$('#lootToast');if(!el)return;el.className='show '+kind;el.querySelector('small').textContent=where;el.querySelector('b').textContent=name;el.querySelector('span').textContent=sub;
+  clearTimeout(showLootToast.t);showLootToast.t=setTimeout(()=>{el.className=kind;},2800);
+}
 function openLoot(b,L){
   if(L.open)return;L.open=true;const p=G.player,it=L.item;
-  if(MB.lootMesh)lootMatrix(b,L,MB.lootMesh,MB.lootBand,L.idx);
+  lootMatrix(b,L);
   const at_=new V3(b.x0+(L.i+1)*MB.CS,b.base+L.f*MB.FH+1,b.z0+(L.j+1)*MB.CS);
-  if(it.startsWith('heal')){const fr={heal30:.3,heal50:.5,heal100:1}[it];const add=Math.min(p.maxHp-p.hp,p.maxHp*fr);p.hp+=add;pushFeed(`${ITEMNAMES[it]} · 체력 +${Math.round(add)}`);fx(true,at_,new V3(0,2,0),1.2,6,.8,0x7fe08a,.9);}
-  else if(it==='ammo'){for(const w of p.w)if(isFinite(w.max)){w.ammo=w.max;w.reload=0;}pushFeed('탄약 상자 · 모든 무기 탄약 보충');fx(true,at_,new V3(0,2,0),1,4,.6,0xffd27a,.9);}
-  else giveWeapon(it);
+  const where=`${MBTYPES[b.type].name} 보급상자에서 획득`;let kind,name,sub;
+  if(it.startsWith('heal')){const fr={heal30:.3,heal50:.5,heal100:1}[it];const add=Math.min(p.maxHp-p.hp,p.maxHp*fr);p.hp+=add;kind='heal';name=(it==='heal100'?'✚✚ ':'✚ ')+ITEMNAMES[it];
+    sub=add>0?`체력 +${Math.round(add)} · ${Math.round(p.hp)} / ${Math.round(p.maxHp)}`:'체력이 이미 가득해요';fx(true,at_,new V3(0,2,0),1.2,6,.8,0x7fe08a,.9);}
+  else if(it==='ammo'){let n=0;for(const w of p.w)if(isFinite(w.max)&&w.ammo<w.max){w.ammo=w.max;w.reload=0;n++;}kind='ammo';name='▮▮▮ 탄약 상자';sub=n?`무기 ${n}개 탄약 가득 채움`:'모든 무기 탄약이 이미 가득해요';fx(true,at_,new V3(0,2,0),1,4,.6,0xffd27a,.9);}
+  else{const g=rollGun(it),[gid,gv]=parseW(g.spec);const r=giveWeapon(g.spec,g.lvl);kind='weapon';name='⌐ '+gunName(gid,gv,g.lvl);sub=(!gv&&g.lvl>0&&GUNCAT[gid]?'강화된 기본 총기! · ':'')+r;fx(true,at_,new V3(0,2,0),1,4,.6,0xffc060,.9);}
+  pushFeed(`${name.replace(/^[^\s]+\s/,'')} · ${sub}`);showLootToast(kind,name,sub,where);
+  G.lootPop={pos:at_.clone(),text:name.replace(/^[^\s]+\s/,''),kind,t:2.2};
   G.lootNear=null;
 }
-function giveWeapon(id){
-  const p=G.player;if(!WEAPONS[id])return;const ex=p.w.find(w=>w.id===id);
-  if(ex){ex.ammo=ex.max;ex.reload=0;pushFeed(`${ex.def.name} · 탄약 보충`);return;}
-  const w=mkWeapon(id,p.T);if(p.w.length>=7)p.w[p.wi]=w;else p.w.push(w);p.wi=p.w.indexOf(w);buildHUD();
-  const m=p.T.wmul&&p.T.wmul[id];pushFeed(`${w.def.name} 획득!`+(m>1?` · 내 병과 특기 ×${m}`:''));
+function giveWeapon(spec,lvl){
+  const p=G.player;const [id]=parseW(spec);if(!WEAPONS[id])return '';p.bag=p.bag||[];
+  if(!GUNCAT[id]){const ex=p.w.find(w=>w.id===id)||p.bag.find(w=>w.id===id);if(ex){ex.ammo=ex.max;ex.reload=0;return '이미 가진 무기 · 탄약 보충';}}
+  const w=mkWeapon(spec,p.T,lvl||0);let where;
+  if(p.w.length<7){p.w.push(w);p.wi=p.w.length-1;buildHUD();where=`${p.w.length}번 키로 선택`;}
+  else if(p.bag.length<14){p.bag.push(w);where='가방에 넣음 (B키)';}
+  else return '가방이 가득 차서 못 주웠어요';
+  const m=p.T.wmul&&p.T.wmul[id];const same=[...p.w,...p.bag].filter(x=>wKey(x)===wKey(w)).length;
+  return where+(isFinite(w.max)?` · ${w.max}발`:'')+(m>1?` · 특기 ×${m}`:'')+(same>=2&&GUNCAT[id]?' · 같은 총이 2개! 가방(B)에서 강화할 수 있어요':'');
+}
+// ---------- 총기 종류 · 강화 ----------
+const GUNCAT={rifle:'돌격소총',smg:'기관단총',lmg:'경기관총',sniper:'저격총',amr:'대물 저격총',pistol:'권총',shotgun:'산탄총'};
+const GUNVARS={
+  rifle:[{id:'ak47',n:'AK-47',sub:'7.62mm · 강한 한 발',s:{dmg:19,cd:.11,spread:.009}},{id:'akm',n:'AKM',sub:'7.62mm · 반동 개량',s:{dmg:19,cd:.1,spread:.008}},
+    {id:'m4a1',n:'M4A1',sub:'5.56mm · 빠른 연사',s:{dmg:15,cd:.075,spread:.005}},{id:'scar',n:'SCAR-L',sub:'5.56mm · 균형형',s:{dmg:17,cd:.085,spread:.005}},
+    {id:'hk416',n:'HK416',sub:'5.56mm · 정확함',s:{dmg:16,cd:.08,spread:.0045}},{id:'k2',n:'K2 소총',sub:'한국 · 5.56mm',s:{dmg:15,cd:.08,spread:.005}},
+    {id:'aug',n:'AUG',sub:'불펍 · 사거리 김',s:{dmg:15,cd:.08,spread:.004,range:1000}},{id:'g36',n:'G36',sub:'5.56mm · 안정적',s:{dmg:15,cd:.08,spread:.005}},
+    {id:'famas',n:'FAMAS',sub:'초고속 연사',s:{dmg:14,cd:.06,spread:.007,ammo:25}}],
+  smg:[{id:'mp5',n:'MP5',sub:'정확한 기관단총',s:{dmg:11,cd:.066,spread:.009,ammo:30}},{id:'uzi',n:'UZI',sub:'초고속 · 퍼짐 큼',s:{dmg:10,cd:.05,spread:.016,ammo:32}},
+    {id:'p90',n:'P90',sub:'대용량 탄창',s:{dmg:10,cd:.055,spread:.011,ammo:50}},{id:'vector',n:'크리스 벡터',sub:'최고 연사',s:{dmg:11,cd:.045,spread:.012,ammo:25}},
+    {id:'mp7',n:'MP7',sub:'관통력',s:{dmg:11,cd:.06,spread:.01,ammo:40}},{id:'k1a',n:'K1A',sub:'한국 · 기관단총',s:{dmg:12,cd:.075,spread:.011,ammo:30}}],
+  lmg:[{id:'m249',n:'M249',sub:'벨트 급탄',s:{dmg:13,cd:.07,spread:.013,ammo:200}},{id:'pkm',n:'PKM',sub:'7.62mm · 강력',s:{dmg:17,cd:.085,spread:.014,ammo:100}},
+    {id:'rpk',n:'RPK',sub:'드럼 탄창 · 정확',s:{dmg:16,cd:.095,spread:.011,ammo:75}},{id:'mg42',n:'MG42',sub:'전기톱 연사',s:{dmg:15,cd:.05,spread:.018,ammo:150}},
+    {id:'k3',n:'K3 경기관총',sub:'한국',s:{dmg:13,cd:.075,spread:.013,ammo:150}},{id:'negev',n:'네게브',sub:'빠른 연사',s:{dmg:13,cd:.065,spread:.012,ammo:150}}],
+  sniper:[{id:'m24',n:'M24',sub:'볼트액션',s:{dmg:165,cd:1.5}},{id:'awm',n:'AWM',sub:'.338 · 최강 위력',s:{dmg:200,cd:1.8,range:2500}},
+    {id:'svd',n:'드라구노프 SVD',sub:'반자동',s:{dmg:120,cd:.7,ammo:10,spread:.0014}},{id:'kar98',n:'Kar98k',sub:'고전 명총',s:{dmg:175,cd:1.6}},
+    {id:'mosin',n:'모신나강',sub:'소련 · 저렴',s:{dmg:160,cd:1.6,spread:.0011}},{id:'k14',n:'K14',sub:'한국 · 저격총',s:{dmg:160,cd:1.4}}],
+  amr:[{id:'m82',n:'M82 바렛',sub:'반자동',s:{dmg:240,cd:1.1,ammo:10,spread:.0015}},{id:'ksvk',n:'KSVK',sub:'12.7mm · 강력',s:{dmg:260,cd:2}},
+    {id:'ntw20',n:'NTW-20',sub:'20mm 대구경',s:{dmg:320,cd:2.8,ammo:3}}],
+  pistol:[{id:'glock17',n:'글록 17',sub:'가볍고 빠름',s:{dmg:16,cd:.15,ammo:17}},{id:'m1911',n:'M1911',sub:'.45 구경',s:{dmg:22,cd:.2,ammo:7}},
+    {id:'deagle',n:'데저트 이글',sub:'.50 · 한 방이 큼',s:{dmg:38,cd:.35,ammo:7,spread:.011}},{id:'m9',n:'베레타 M9',sub:'안정적',s:{dmg:17,cd:.16,ammo:15}},
+    {id:'k5',n:'K5 권총',sub:'한국',s:{dmg:17,cd:.16,ammo:13}},{id:'tt33',n:'TT-33',sub:'소련',s:{dmg:19,cd:.18,ammo:8}}],
+  shotgun:[{id:'m870',n:'레밍턴 870',sub:'펌프액션',s:{dmg:14,cd:.9,ammo:6}},{id:'spas12',n:'SPAS-12',sub:'반자동',s:{dmg:13,cd:.5,ammo:8}},
+    {id:'aa12',n:'AA-12',sub:'자동 산탄총',s:{dmg:11,cd:.2,ammo:20,spread:.05}},{id:'saiga',n:'사이가-12',sub:'탄창식',s:{dmg:12,cd:.3,ammo:10}}],
+};
+function parseW(spec){const a=String(spec).split(':');return [a[0],a[1]||null];}
+function gunVar(id,vid){return vid&&GUNVARS[id]?GUNVARS[id].find(x=>x.id===vid)||null:null;}
+function gunName(id,vid,lvl){const V=gunVar(id,vid);const n=V?V.n:GUNCAT[id]?'기본 '+GUNCAT[id]:WEAPONS[id].name;return n+(lvl>0?` +${lvl}`:'');}
+function enhanceChance(lvl){return clamp(.95-lvl*.03,.08,.95);}
+function rollGun(cat){
+  if(!GUNVARS[cat])return {spec:cat,lvl:0};
+  if(Math.random()<.45){const r=Math.random();const lvl=r<.04?4+Math.floor(Math.random()*3):r<.34?1+Math.floor(Math.random()*3):0;return {spec:cat,lvl};}
+  const V=pick(GUNVARS[cat]);return {spec:cat+':'+V.id,lvl:Math.random()<.1?1:0};
+}
+function wKey(w){return w.id+':'+(w.vid||'')+':'+w.lvl;}
+function wSpec(w){return w.vid?w.id+':'+w.vid:w.id;}
+// ---------- 가방 · 강화 창 ----------
+function openArmory(){const p=G.player;if(G.state!=='play'||!p||!p.alive)return;p.bag=p.bag||[];G.paused=true;fireHeld=false;$('#armory').hidden=false;$('#armMsg').textContent='';if(document.pointerLockElement===glc){ML.quiet=true;try{document.exitPointerLock();}catch(e){}}renderArmory();}
+function closeArmory(){$('#armory').hidden=true;G.paused=false;last=performance.now();tryLock();}
+function wStats(w){const d=w.def;const rps=d.cd>0?(1/d.cd):0;return d.kind==='melee'?`근접 피해 ${Math.round(d.dmg)}`:`피해 ${Math.round(d.dmg)}${d.pellets?'×'+d.pellets:''} · 초당 ${rps.toFixed(rps<3?1:0)}발 · 탄창 ${isFinite(w.max)?w.max:'∞'}`;}
+function renderArmory(){
+  const p=G.player,root=$('#armList');root.textContent='';p.bag=p.bag||[];
+  const sec=(title)=>{const h=document.createElement('h4');h.textContent=title;root.append(h);};
+  const row=(w,btns)=>{const r=document.createElement('div');r.className='arow';const t=document.createElement('div');const b=document.createElement('b');b.textContent=w.def.name;if(w.lvl>0)b.className='lv'+Math.min(3,Math.floor(w.lvl/10)+1);const s=document.createElement('small');s.textContent=wStats(w);t.append(b,s);r.append(t);
+    const bx=document.createElement('div');bx.className='abtn';for(const [label,fn,cls] of btns){const k=document.createElement('button');k.type='button';k.textContent=label;if(cls)k.className=cls;k.addEventListener('click',e=>{e.stopPropagation();fn();});bx.append(k);}r.append(bx);root.append(r);};
+  sec('총기 강화 · 같은 총 + 같은 강화 단계 2개를 합쳐요');
+  const groups={};for(const w of [...p.w,...p.bag]){if(!GUNCAT[w.id]||w.lvl>=30)continue;(groups[wKey(w)]=groups[wKey(w)]||[]).push(w);}
+  let any=false;
+  for(const k in groups){const g=groups[k];if(g.length<2)continue;any=true;const w=g[0],ch=enhanceChance(w.lvl);
+    const r=document.createElement('div');r.className='arow up';const t=document.createElement('div');const b=document.createElement('b');b.textContent=`${w.def.name} ×${g.length} → ${gunName(w.id,w.vid,w.lvl+1)}`;const s=document.createElement('small');s.textContent=`성공 확률 ${Math.round(ch*100)}% · 실패하면 하나만 남아요`;t.append(b,s);r.append(t);
+    const k2=document.createElement('button');k2.type='button';k2.className='go';k2.textContent='강화';k2.addEventListener('click',e=>{e.stopPropagation();doEnhance(k);});const bx=document.createElement('div');bx.className='abtn';bx.append(k2);r.append(bx);root.append(r);}
+  if(!any){const e=document.createElement('p');e.className='aempty';e.textContent='강화할 수 있는 짝이 없어요. 같은 총(같은 강화 단계)을 하나 더 구하세요. 최대 +30까지 강화돼요.';root.append(e);}
+
+  sec(`장착 중 (${p.w.length}/7)`);
+  p.w.forEach((w,i)=>row(w,p.w.length>1?[['가방으로',()=>{if(p.bag.length>=14){$('#armMsg').textContent='가방이 가득 찼어요';return;}p.bag.push(p.w.splice(i,1)[0]);p.wi=Math.min(p.wi,p.w.length-1);buildHUD();renderArmory();}]]:[]));
+  sec(`가방 (${p.bag.length}/14)`);
+  if(!p.bag.length){const e=document.createElement('p');e.className='aempty';e.textContent='비어 있어요. 건물 보급상자에서 총을 주우면 여기에 쌓여요.';root.append(e);}
+  p.bag.forEach((w,i)=>row(w,[['장착',()=>{const it=p.bag.splice(i,1)[0];if(p.w.length<7){p.w.push(it);p.wi=p.w.length-1;}else{p.bag.push(p.w[p.wi]);p.w[p.wi]=it;}buildHUD();renderArmory();}],['버리기',()=>{p.bag.splice(i,1);renderArmory();},'ghost']]));
+}
+function doEnhance(k){
+  const p=G.player;const all=[...p.w.map((w,i)=>({w,a:p.w,i})),...p.bag.map((w,i)=>({w,a:p.bag,i}))].filter(o=>wKey(o.w)===k);if(all.length<2)return;
+  const keep=all[0],used=all.find(o=>o!==keep&&o.a===p.bag)||all[1];
+  used.a.splice(used.a.indexOf(used.w),1);
+  const lvl=keep.w.lvl,ok=Math.random()<enhanceChance(lvl);
+  if(ok){const nw=mkWeapon(wSpec(keep.w),p.T,lvl+1);keep.a[keep.a.indexOf(keep.w)]=nw;$('#armMsg').textContent=`✦ 강화 성공! ${nw.def.name}`;$('#armMsg').className='ok';pushFeed(`강화 성공 · ${nw.def.name}`);}
+  else{$('#armMsg').textContent=`강화 실패… ${keep.w.def.name} 하나만 남았어요`;$('#armMsg').className='bad';pushFeed(`강화 실패 · ${keep.w.def.name}`);}
+  p.wi=Math.min(p.wi,p.w.length-1);buildHUD();renderArmory();
 }
 // ---------- 건물 안 길찾기 (적 보병) ----------
 function mbCellOf(b,x,z){return [clamp(Math.floor((x-b.x0)/MB.CS),0,b.gw-1),clamp(Math.floor((z-b.z0)/MB.CS),0,b.gd-1)];}
@@ -1824,7 +2019,7 @@ function updatePreview(dt,t){
 }
 
 // ---------- player ----------
-function mkWeapon(id,T){const d=WEAPONS[id];let ammo=d.ammo;if(isFinite(ammo)){if(T.ammo&&typeof T.ammo==='object')ammo=T.ammo[id]!=null?T.ammo[id]:ammo;else ammo=Math.max(1,Math.round(ammo*(T.ammo||1)));}const RT={glock:1.6,ak:2.4,shotgun:3.4,asm:9,sam:7,cruise:12,atgm:8,sam_t:7,aam:7,agm:9,bomb:10,rifle:2.2,smg:1.8,lmg:5,sniper:3,amr:4,grenade:8,rpg:7,manpads:7};return {id,def:d,ammo,max:ammo,cd:0,reload:0,rt:RT[id]||8};}
+function mkWeapon(spec,T,lvl){lvl=lvl||0;const [id,vid]=parseW(spec);const V=gunVar(id,vid);const d=Object.assign({},WEAPONS[id],V?V.s:{});if(GUNCAT[id]){d.name=gunName(id,V?V.id:null,lvl);d.dmg*=1+.06*lvl;d.cd*=Math.max(.6,1-.008*lvl);if(d.spread)d.spread*=Math.max(.5,1-.012*lvl);}let ammo=d.ammo;if(isFinite(ammo)){if(T.ammo&&typeof T.ammo==='object')ammo=T.ammo[id]!=null?T.ammo[id]:ammo;else ammo=Math.max(1,Math.round(ammo*(T.ammo||1)));}const RT={pistol:1.6,shotgun:3.4,asm:9,sam:7,cruise:12,atgm:8,sam_t:7,aam:7,agm:9,bomb:10,rifle:2.2,smg:1.8,lmg:5,sniper:3,amr:4,grenade:8,rpg:7,manpads:7};if(GUNCAT[id])d.sub=`${GUNCAT[id]} · ${ammo}발`+(V?' · '+V.sub:'')+(lvl>0?` · 강화 +${lvl}`:'');return {id,vid:V?V.id:null,lvl,def:d,ammo,max:ammo,cd:0,reload:0,rt:RT[id]||8};}
 function createPlayer(){
   const C=CLASSES[S.cls],PT=PAINTS[S.paint]||PAINTS.std;
   const pm=Object.assign({hp:1,speed:1,turn:1,dmg:1,acc:1,skillCd:1,score:1,evade:0},PT.m);
@@ -1842,7 +2037,7 @@ function createPlayer(){
   if(p.cls==='infantry'){p.camDist=5.5;p.eye=1.75;p.soldier=true;}
   if(T.id==='bomber'){p.camDist=60;p.eye=4;}
   if(p.cls==='heli'){p.camDist=24;p.eye=2;p.pos.copy(spawnPointFor('heli',T));p.yaw=Math.atan2(-p.pos.x,-p.pos.z);p.q.setFromAxisAngle(UP,p.yaw);p.speed=0;p.throttle=0;p.vel.set(0,0,0);}
-  p.w=(T.weapons||C.weapons).map(id=>mkWeapon(id,T));
+  p.w=(T.weapons||C.weapons).map(id=>mkWeapon(id,T));p.bag=[];
   p.wi=0;
   p.sk=C.skills.map(id=>({id,def:SKILLS[id],cd:0}));
   p.cd2={ciws:0,salvo:0};
@@ -1866,7 +2061,7 @@ function startGame(){
   G.camYaw=G.player.yaw;G.camPitch=G.player.domain==='air'?0:-.08;G.camOff.set(0,0,0);G.camScale=1;G.zoom=false;
   G.inter=4;G.waveActive=false;
   $('#menu').hidden=true;$('#over').hidden=true;$('#pause').hidden=true;$('#hud').hidden=false;
-  $('#touch').hidden=!isTouch;$('#tHide').hidden=G.player.cls!=='infantry';$('#tUp').hidden=$('#tDown').hidden=G.player.cls!=='heli';
+  $('#touch').hidden=!touchOn();document.body.classList.toggle('touchui',touchOn());{const inf=G.player.cls==='infantry';$('#tJump').hidden=$('#tDash').hidden=$('#tBag').hidden=!inf;}$('#tLoot').hidden=true;$('#tHide').hidden=G.player.cls!=='infantry';$('#tUp').hidden=$('#tDown').hidden=G.player.cls!=='heli';
   buildHUD();
   banner('작전 개시',`${G.player.T.name} · ${TERRAINS[S.terrain].name} · ${DIFF.name} · ${G.horde?'인해전술 무한 웨이브':'무한 웨이브'}`,3);
   tryLock();
@@ -2415,7 +2610,8 @@ function updateWrecks(dt){
 }
 
 // ================= PLAYER UPDATE =================
-const keys={};let isTouch=false;
+const keys={};let isTouch=(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window&&navigator.maxTouchPoints>0);
+function touchOn(){return S.touchUI==='on'||(S.touchUI!=='off'&&isTouch);}
 const tc={jid:null,jx:0,jy:0,ax:0,ay:0,aid:null,lx:0,ly:0,fire:false,kx:0,ky:0};
 let fireHeld=false;
 function axes(){
@@ -2811,7 +3007,8 @@ function drawOverlay(dt){
   // nose reticle for jets
   if(p.domain==='air'&&p.alive){const f=_b.set(0,0,1).applyQuaternion(p.q);const pt=_c.copy(p.pos).addScaledVector(f,600);const cs=_d.copy(pt).applyMatrix4(view);if(cs.z<0){const s=proj(pt);c.strokeStyle='#a6e07f';c.lineWidth=2;c.beginPath();c.arc(s.x,s.y,9,0,TAU);c.moveTo(s.x-20,s.y);c.lineTo(s.x-9,s.y);c.moveTo(s.x+9,s.y);c.lineTo(s.x+20,s.y);c.moveTo(s.x,s.y-9);c.lineTo(s.x,s.y-16);c.stroke();}}
   // hit marker
-  if(G.lootNear){c.save();c.textAlign='center';c.fillStyle='rgba(20,22,18,.7)';c.fillRect(cx-120,cy+86,240,26);c.fillStyle='rgba(255,214,120,.98)';c.font='bold 14px "IBM Plex Sans KR", sans-serif';c.fillText('[X] '+G.lootNear.label,cx,cy+104);c.restore();}
+  if(G.lootPop){G.lootPop.t-=dt;if(G.lootPop.t<=0)G.lootPop=null;else{const lp=G.lootPop,sp=proj(_e.copy(lp.pos).setY(lp.pos.y+.4+(2.2-lp.t)*.6));if(sp.z<1){c.save();c.textAlign='center';c.globalAlpha=Math.min(1,lp.t/.6);c.font='bold 17px "IBM Plex Sans KR", sans-serif';c.lineWidth=4;c.strokeStyle='rgba(0,0,0,.6)';c.strokeText('+ '+lp.text,sp.x,sp.y);c.fillStyle=lp.kind==='heal'?'#a6e07f':lp.kind==='ammo'?'#82d6ff':'#f3b23a';c.fillText('+ '+lp.text,sp.x,sp.y);c.restore();}}}
+  if(G.lootNear&&!touchOn()){c.save();c.textAlign='center';c.fillStyle='rgba(20,22,18,.7)';c.fillRect(cx-120,cy+86,240,26);c.fillStyle='rgba(255,214,120,.98)';c.font='bold 14px "IBM Plex Sans KR", sans-serif';c.fillText('[X] '+G.lootNear.label,cx,cy+104);c.restore();}
   if(G.intel&&G.time-G.intel.t<30&&G.enemies.some(e=>e.alive&&e.soldier&&!e.see&&e.pos.distanceTo(G.intel.pos)<900)){const sp=proj(_e.copy(G.intel.pos).setY(G.intel.pos.y+2.4));if(sp.z<1){c.save();c.textAlign='center';c.fillStyle='rgba(255,120,90,.92)';c.font='bold 18px sans-serif';c.fillText('?',sp.x,sp.y);c.font='11px "IBM Plex Sans KR", sans-serif';c.fillText(G.intel.tracked?'잠복 추적 · 적이 짐작한 내 위치':G.intel.heard?'적이 총소리를 들은 위치':'적이 기억하는 내 위치',sp.x,sp.y+14);c.restore();}}
   if(p.cls==='infantry'&&p.hidden&&p.alive){c.fillStyle='rgba(166,224,127,.95)';c.font='14px "IBM Plex Sans KR", sans-serif';c.fillText('잠복 중 · 적이 나를 보지 못해요',cx,cy+72);c.font='12px "Share Tech Mono", monospace';}
   if(p.domain==='air'&&p.alive&&w.def.kind==='bomb'){p.parts.muzzle.getWorldPosition(_e);const bp=_e.clone(),bv=p.vel.clone();let hit=null;for(let s=0;s<400;s++){bv.y-=19.6*.05;bp.addScaledVector(bv,.05);const g=Math.max(height(bp.x,bp.z),0);if(bp.y<=g){bp.y=g;hit=bp;break;}}
@@ -3213,6 +3410,7 @@ function frame(now){
   if(NET.on)netTick(dt);
   mouseEdge(dt);
   if(G.state==='play')lootTick();
+  {const tl=$('#tLoot'),show=!!(G.lootNear&&touchOn()&&G.state==='play');if(tl.hidden===show){tl.hidden=!show;}if(show&&tl.dataset.l!==G.lootNear.label){tl.dataset.l=G.lootNear.label;tl.textContent='📦 '+G.lootNear.label;}}
   if(G.state==='play'&&!G.paused&&S.hideTrack==='on'&&!G.pvp&&G.player&&G.player.alive&&G.player.hidden){G.trackT=(G.trackT==null?8:G.trackT)-dt;
     if(G.trackT<=0){G.trackT=rand(7,11);const p=G.player,inB=p.inBld,r=inB?0:rand(4,14),a=Math.random()*TAU;G.intel={pos:new V3(p.pos.x+Math.sin(a)*r,p.pos.y,p.pos.z+Math.cos(a)*r),t:G.time,tracked:true};}}else G.trackT=null;
   if(G.horde&&G.state!=='menu')hordeTick(dt);
@@ -3270,6 +3468,8 @@ function setPause(v){if(G.state!=='play'&&v)return;G.paused=v;$('#pause').hidden
 addEventListener('keydown',e=>{
   if(e.target&&e.target.tagName==='INPUT')return;
   keys[e.code]=true;
+  if(!$('#armory').hidden){if(e.code==='Escape'||e.code==='KeyB')closeArmory();return;}
+  if(e.code==='KeyB'&&G.state==='play'&&!G.paused&&!e.repeat){openArmory();return;}
   if(G.state!=='play')return;
   if(e.code==='Escape'||e.code==='KeyP'){setPause(!G.paused);return;}
   if(G.paused)return;
@@ -3302,7 +3502,7 @@ function clampPitch(){const air=G.player&&G.player.domain==='air';G.camPitch=cla
 glc.addEventListener('wheel',e=>{if(G.state!=='play'||!G.player)return;e.preventDefault();const n=G.player.w.length;selWeapon((G.player.wi+(e.deltaY>0?1:-1)+n)%n);},{passive:false});
 // touch
 glc.addEventListener('touchstart',e=>{
-  isTouch=true;if(G.state!=='play')return;e.preventDefault();$('#touch').hidden=false;
+  isTouch=true;if(G.state!=='play')return;e.preventDefault();if(touchOn()){$('#touch').hidden=false;document.body.classList.add('touchui');}
   if(G.paused){setPause(false);return;}
   for(const t of e.changedTouches){
     if(t.clientX<innerWidth*.45&&tc.jid==null){tc.jid=t.identifier;tc.jx=t.clientX;tc.jy=t.clientY;tc.ax=tc.ay=0;}
@@ -3323,6 +3523,15 @@ $('#tZoom').addEventListener('click',()=>{G.zoom=!G.zoom;});
 $('#tHide').addEventListener('click',()=>toggleCrouch());
 for(const [id,k] of [['#tUp','up'],['#tDown','down']]){const el=$(id);el.addEventListener('touchstart',e=>{e.preventDefault();tc[k]=true;},{passive:false});el.addEventListener('touchend',()=>{tc[k]=false;});el.addEventListener('touchcancel',()=>{tc[k]=false;});}
 $('#tPause').addEventListener('click',()=>setPause(true));
+$('#armClose').addEventListener('click',()=>closeArmory());$('#tBag').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(G.state==='play'&&!G.paused)openArmory();});
+{const tap=(id,fn)=>{const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(G.state!=='play'||G.paused)return;fn();});el.addEventListener('contextmenu',e=>e.preventDefault());};
+ tap('#tJump',()=>{if(G.player)G.player.wantJump=true;});
+ tap('#tReload',()=>{const p=G.player;if(p)reloadWeapon(p.w[p.wi]);});
+ tap('#tWeap',()=>{const p=G.player;if(p&&p.w.length)selWeapon((p.wi+1)%p.w.length);});
+ tap('#tView',()=>{S.view=S.view==='first'?'third':'first';saveSettings();pushFeed(S.view==='first'?'1인칭 시점':'3인칭 시점');});
+ tap('#tLoot',()=>{if(G.lootNear)openLoot(G.lootNear.b,G.lootNear.L);});
+ const d=$('#tDash');const on=e=>{e.preventDefault();e.stopPropagation();keys.KeyV=true;d.classList.add('on');},off=()=>{keys.KeyV=false;d.classList.remove('on');};
+ d.addEventListener('pointerdown',on);d.addEventListener('pointerup',off);d.addEventListener('pointercancel',off);d.addEventListener('pointerleave',off);}
 $('#resumeBtn').addEventListener('click',()=>setPause(false));
 $('#quitBtn').addEventListener('click',()=>toMenu());
 $('#retryBtn').addEventListener('click',()=>{S.seed=S.seed;buildWorld();startGame();});
@@ -3360,7 +3569,7 @@ function renderMenu(){
   if(!fxs.length){const s=document.createElement('span');s.textContent='능력치 변화 없음';pf.append(s);}
   for(const [t,g] of fxs){const s=document.createElement('span');s.className=g?'up':'dn';s.textContent=t;pf.append(s);}
   const T=curT();const lo=$('#loadout');lo.innerHTML='';
-  (T.weapons||C.weapons).forEach((id,i)=>{const d=WEAPONS[id];const r=document.createElement('div');r.className='lo';r.innerHTML=`<kbd>${i+1}</kbd><span><span class="n"></span> <small></small></span>`;r.querySelector('.n').textContent=d.name;r.querySelector('small').textContent=d.sub+(T.wmul&&T.wmul[id]?` · 특기 ×${T.wmul[id]}`:'');lo.append(r);});
+  (T.weapons||C.weapons).forEach((id,i)=>{const d=mkWeapon(id,T).def;const r=document.createElement('div');r.className='lo';r.innerHTML=`<kbd>${i+1}</kbd><span><span class="n"></span> <small></small></span>`;r.querySelector('.n').textContent=d.name;r.querySelector('small').textContent=d.sub+(T.wmul&&T.wmul[id.split(':')[0]]?` · 특기 ×${T.wmul[id.split(':')[0]]}`:'');lo.append(r);});
   C.skills.forEach((id,i)=>{const d=SKILLS[id];const r=document.createElement('div');r.className='lo';r.innerHTML=`<kbd>${'QER'[i]}</kbd><span><span class="n"></span> <small></small></span>`;r.querySelector('.n').textContent=d.name;r.querySelector('small').textContent=d.desc;lo.append(r);});
   seg($('#optTerrain'),TERRAINS,'terrain',()=>{if(!terrOk(S.cls,S.terrain))S.terrain='coast';buildWorld();renderMenu();setPreview();});
   {const ks=Object.keys(TERRAINS);[...$('#optTerrain').children].forEach((b,i)=>{if(!terrOk(S.cls,ks[i])){b.disabled=true;b.title=CLASSES[S.cls].name+(TERRAINS[ks[i]].noLand?'(은)는 바다 지형에서 출격할 수 없어요':'(은)는 물이 없는 지형에서 출격할 수 없어요');}});}
@@ -3383,6 +3592,7 @@ function renderMenu(){
    if(vs){if(S.foeVar!=='random'&&!vs[S.foeVar])S.foeVar='random';const opts={random:{name:'랜덤'}};for(const k in vs)opts[k]={name:vs[k]};seg($('#optFoeVar'),opts,'foeVar');}}
   if(!RELOADS[S.reload])S.reload='auto';
   seg($('#optReload'),RELOADS,'reload');
+  if(!TOUCHUIS[S.touchUI])S.touchUI='auto';seg($('#optTouch'),TOUCHUIS,'touchUI',()=>saveSettings());
   if(!HIDETRACK[S.hideTrack])S.hideTrack='off';seg($('#optHideTrack'),HIDETRACK,'hideTrack',()=>saveSettings());
   if(!VIEWS[S.view])S.view='third';seg($('#optView'),VIEWS,'view',()=>saveSettings());
   if(!HPMULS[S.hpFoe])S.hpFoe='1';seg($('#optHpFoe'),HPMULS,'hpFoe',()=>saveSettings());
